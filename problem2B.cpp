@@ -31,7 +31,8 @@ class scanner{
 
         if(dclCode!=""){
             if(regex_match(dclCode, dclMatch, dcl)){
-                if(regex_match(dclMatch[3].str(), astringMatch, astring)){
+                string tmp = dclMatch[3].str();
+                if(regex_match(tmp, astringMatch, astring)){
                     cout<<"strdcl "<<dclMatch[1]<<endl;
                     cout<<"id "<<dclMatch[2]<<endl;
                     cout<<"quote "<<astringMatch[1]<<endl;
