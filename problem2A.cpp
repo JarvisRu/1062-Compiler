@@ -10,20 +10,21 @@ void invalid(){
 
 int main(){
 
-    string stmt;
+    string stmt, tmp;
     regex stmtRE("([a-z])\\s*(=)\\s*([0-9]+|[a-z])");
     regex id("[a-z]");
     smatch matchStr;
 
-    while(getline(cin,stmt)){
-        if(stmt=="")    continue;
+    while(getline(cin, stmt)) {
+        if(stmt == "")    continue;
         if(regex_match(stmt, matchStr, stmtRE)){
-            cout<<"id "<<matchStr[1]<<endl;
-            cout<<"assign "<<matchStr[2]<<endl;
-            if(regex_match(matchStr[3].str(), id))
-                cout<<"id "<<matchStr[3]<<endl;
+            cout << "id " << matchStr[1] << endl;
+            cout << "assign " << matchStr[2] << endl;
+            tmp = matchStr[3].str();
+            if(regex_match(tmp, id))
+                cout << "id " << matchStr[3] << endl;
             else
-                cout<<"inum "<<matchStr[3]<<endl;
+                cout << "inum " << matchStr[3] << endl;
         }
         else
             invalid();
