@@ -143,18 +143,14 @@ bool Expr(){
 		ss.clear();
 		expr = "";
 		getline(ss, expr);
-		if(!expr.empty()) {
-			if((!check("plus", symbol) || !check("minus", symbol)) && !Val())
-				return false;
-			else 
-				Expr();
-		}
+		if((!check("plus", symbol) && !check("minus", symbol)) || !Val())
+			return false;
 		else {
-			if((!check("plus", symbol) || !check("minus", symbol)) && !Val())
-				return false;
-			else 
+			if(!expr.empty())
+				Expr();
+			else
 				return true;
-		}
+		} 
 	}
 	return true;
 }
@@ -173,6 +169,7 @@ void Stmt(){
 		if (!check("print", print) || !check("id", id))
 			error = true;
 	}
+	// Without Expr in grammar
 	// else {
 	// 	ss << input;
 	// 	ss >> id >> asign >> val;
@@ -195,11 +192,11 @@ void Stmts(){
 			getline(cin, input);
 		used = true;
 		CutFrontSpaceOfInput();
-		if((input[0] >= 'a' || input[0] <= 'z') && input[0]!='$') {
+		if((input[0] >= 'a' || input[0] <= 'z') && input[0]!='$' && !input.empty()) {
 			Stmt();
 			Stmts();	
 		}
-		else if(input[0] == '$'){
+		else if(input[0] == '$' || input.empty()){
 		}
 		else
 			error = true;

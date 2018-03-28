@@ -9,11 +9,12 @@ using namespace std;
 stringstream ss;
 string input;
 string id, asign, val;
-// string print, id;
-// string strdcl, id, astring;
+string print;
+string floatdcl, intdcl;
+string expr, symbol;
 vector<pair<string,string>> tokenStream;
 
-
+//  -------------------Match----------------------------------
 bool check(string t, string v) {
     if(t == "id") {
         if (v.length() == 1 && v[0] >= 'a' && v[0] <= 'z')
@@ -108,10 +109,46 @@ bool check(string t, string v) {
     return true;
 }
 
-void CutFrontSpace() {
+// --------------------CutFrontSpaceOf---------------------------------
+void CutFrontSpaceOfInput() {
 	while(input[0] == ' ' && !input.empty()) {
         input = input.substr(1, input.length()-1);
 	}
+}
+
+void CutFrontSpaceOfExpr() {
+	while(expr[0] == ' ' && !expr.empty()) {
+        expr = expr.substr(1, expr.length()-1);
+	}
+}
+
+// -------------------Expr() and Val()----------------------------------
+
+bool Expr(){
+	if(expr == "")
+		return true;
+	else {
+		CutFrontSpaceOfExpr();
+		ss.clear();
+		ss << expr;
+		ss >> symbol >> val;
+		ss.clear();
+		expr = "";
+		getline(ss, expr);
+		if(!expr.empty()) {
+			if((!check("plus", symbol) || !check("minus", symbol)) && !Val())
+				return false;
+			else 
+				Expr();
+		}
+		else {
+			if((!check("plus", symbol) || !check("minus", symbol)) && !Val())
+				return false;
+			else 
+				return true;
+		}
+	}
+	return true;
 }
 
 bool Val(){
@@ -121,6 +158,7 @@ bool Val(){
         return true;
 }
 
+// --------------------------main---------------------------------
 
 int main(){
 
