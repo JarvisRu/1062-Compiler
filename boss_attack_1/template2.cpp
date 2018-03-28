@@ -3,16 +3,28 @@
 #include<sstream>
 #include<vector>
 #include <utility>
-#include<cctype>
 using namespace std;
 
 stringstream ss;
 string input;
 string id, asign, val;
-// string print, id;
-// string strdcl, id, astring;
+string print;
+string floatdcl, intdcl;
+string expr, symbol;
 vector<pair<string,string>> tokenStream;
+bool error = false;
+bool used = false;
 
+bool Val();
+bool Expr();
+bool check(string, string);
+void Proc();
+void Dcls();
+void Dcl();
+void Stmts();
+void Stmt();
+void CutFrontSpaceOfInput();
+void CutFrontSpaceOfExpr();
 
 bool check(string t, string v) {
     if(t == "id") {
@@ -108,10 +120,43 @@ bool check(string t, string v) {
     return true;
 }
 
-void CutFrontSpace() {
+void CutFrontSpaceOfInput() {
 	while(input[0] == ' ' && !input.empty()) {
         input = input.substr(1, input.length()-1);
 	}
+}
+
+void CutFrontSpaceOfExpr() {
+	while(expr[0] == ' ' && !expr.empty()) {
+        expr = expr.substr(1, expr.length()-1);
+	}
+}
+
+bool Expr(){
+	if(expr == "")
+		return true;
+	else {
+		CutFrontSpaceOfExpr();
+		ss.clear();
+		ss << expr;
+		ss >> symbol >> val;
+		ss.clear();
+		expr = "";
+		getline(ss, expr);
+		if(!expr.empty()) {
+			if((!check("plus", symbol) || !check("minus", symbol)) && !Val())
+				return false;
+			else 
+				Expr();
+		}
+		else {
+			if((!check("plus", symbol) || !check("minus", symbol)) && !Val())
+				return false;
+			else 
+				return true;
+		}
+	}
+	return true;
 }
 
 bool Val(){
@@ -121,27 +166,98 @@ bool Val(){
         return true;
 }
 
+void Stmt(){
+	if(input[0] == 'p') {
+		ss << input;
+		ss >> print >> id;
+		if (!check("print", print) || !check("id", id))
+			error = true;
+	}
+	// else {
+	// 	ss << input;
+	// 	ss >> id >> asign >> val;
+	// 	if (!check("id", id) || !check("assign", asign) || !Val())
+	// 		error = true;
+	// }
+	else {
+		ss << input;
+		ss >> id >> asign >> val;
+		getline(ss, expr);
+		if (!check("id", id) || !check("assign", asign) || !Val() || !Expr())
+			error = true;
+	}
+	ss.clear();
+}
+
+void Stmts(){
+	if(!error) {
+		if(used)
+			getline(cin, input);
+		used = true;
+		CutFrontSpaceOfInput();
+		if((input[0] >= 'a' || input[0] <= 'z') && input[0]!='$') {
+			Stmt();
+			Stmts();	
+		}
+		else if(input[0] == '$'){
+		}
+		else
+			error = true;
+	}
+}
+
+void Dcl(){
+	if(input[0] == 'f') {
+		ss << input;
+		ss >> floatdcl >> id;
+		if (!check("floatdcl", floatdcl) || !check("id", id))
+			error = true;
+	}
+	else {
+		ss << input;
+		ss >> intdcl >> id;
+		if (!check("intdcl", intdcl) || !check("id", id))
+			error = true;
+	}
+	ss.clear();
+}
+
+void Dcls(){
+	if(!error) {
+		getline(cin, input);
+		CutFrontSpaceOfInput();
+		if((input[0] == 'f' || input[0] == 'i')) {
+			used = true;
+			Dcl();
+			Dcls();	
+		}
+		else {
+			used = false;
+		}
+	}
+}
+
+void Proc(){
+	Dcls();
+	if(error) {
+		cout << "valid input at Dcls" << endl;
+	}
+	else {
+		Stmts();
+		if(error) {
+			cout << "valid input at Stmts" << endl;
+		}
+		else {
+			for(int i=0 ; i<tokenStream.size() ; ++i) {
+				cout << tokenStream[i].first << " " << tokenStream[i].second << endl;
+			}
+			// tokenStream.erase(tokenStream.begin(), tokenStream.end());
+		}
+	}
+}
 
 int main(){
-
-    // get input
-    getline(cin, input);
-    ss << input;
-    ss >> id >> asign >> val;
-    ss.clear();
-
-    // check token
-    if(!check("id", id) || !check("assign", asign) || !Val() )
-        return false;
-    else
-        return true;
-
-    // print token
-    for(int i=0 ; i<tokenStream.size() ; ++i) {
-        cout << tokenStream[i].first << " " << tokenStream[i].second << endl;
-    }
-    // erase token
-    tokenStream.erase(tokenStream.begin(), tokenStream.end());
-
+	Proc();
     return 0;
 }
+
