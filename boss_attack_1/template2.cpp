@@ -192,7 +192,7 @@ void Stmts(){
 			getline(cin, input);
 		used = true;
 		CutFrontSpaceOfInput();
-		if((input[0] >= 'a' || input[0] <= 'z') && input[0]!='$' && !input.empty()) {
+		if(input[0] >= 'a' && input[0] <= 'z') {
 			Stmt();
 			Stmts();	
 		}
