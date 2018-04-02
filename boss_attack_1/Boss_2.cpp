@@ -1,4 +1,5 @@
 #include<iostream>
+#include<stdio.h>
 #include<sstream>
 #include<string>
 #include<vector>
@@ -24,6 +25,7 @@ void PrintErrorMessage(int);
 
 int main(){
     Program();
+    cout << "ByeBye~";
     return 0;
 }
 
@@ -32,26 +34,34 @@ void Program(){
     while(true) {
         error = false;
         cout << "> ";
-        getline(cin, input);
+        char tmp=' ';
+        input.clear();
+        do {
+            input += tmp;
+            tmp = getchar();
+        }while(tmp != '\n' && tmp != EOF);
+        
+        // add $ in the end to detect if this input is empty
+        input += '$';
+        // delete the front space  
+        CutFrontSpaceOfInput();
 
         // detect eof
-        if(cin.eof()) {
-            cout << "ByeBye~";
-            return; 
+        if(tmp == EOF) {
+            return;
         }
 
-        input += '$';
         if(input[0] == '$'){}
-            // cout << "new line" << endl;
         else {
-            input = input.substr(0,input.size()-1);
+            input = input.substr(0, input.size()-1);
             Exps();
             if(!error) {
                 // all valid token
-                for(int i=0 ; i<tokenStream.size() ; ++i) {
+                int token_size = tokenStream.size();
+                for(int i=0 ; i<token_size ; ++i) {
                     // cout << tokenStream[i].first << " " << tokenStream[i].second << endl;
                     if(tokenStream[i].first == "INT" && tokenStream[i].second[0] == '+')
-                        tokenStream[i].second.substr(1);
+                        tokenStream[i].second.substr(1, input.size()-1);
                 }
                 // eval prifix
                 evalPrifix();
@@ -111,7 +121,7 @@ bool check(string t) {
         // integer is valid or not
         if(input.length() == int_length || input[int_length] == ' ' || input[int_length] == '+' || input[int_length] == '-' || input[int_length] == '*' || input[int_length] == '/') {
             tokenStream.push_back(make_pair(t, input.substr(0, int_length)));
-            input = input.substr(int_length);
+            input = input.substr(int_length, input.size()-int_length);
         }
         else {
             // // cout << "Not INT in check:" << input << endl;
@@ -125,7 +135,7 @@ bool check(string t) {
     else if(t == "OPERATOR") {
         if(input[0] == '+' || input[0] == '-' || input[0] == '*' || input[0] == '/') {
             tokenStream.push_back(make_pair(t, input.substr(0,1)));
-            input = input.substr(1);
+            input = input.substr(1, input.size()-1);
         }
         else {
             int len = 0;
@@ -136,7 +146,7 @@ bool check(string t) {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -214,7 +224,7 @@ void evalPrifix(){
 
 void CutFrontSpaceOfInput() {
 	while(input[0] == ' ' && !input.empty()) {
-        input = input.substr(1);
+        input = input.substr(1, input.size()-1);
 	}
 }
 
