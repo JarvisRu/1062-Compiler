@@ -20,7 +20,8 @@ void Exp();
 bool check(string);
 void Program();
 void CutFrontSpaceOfInput();
-void evalPrifix();
+void evalPrefix();
+// void evalPrefix();
 void PrintErrorMessage(int);
 
 int main(){
@@ -41,8 +42,8 @@ void Program(){
             tmp = getchar();
         }while(tmp != '\n' && tmp != EOF);
         
-        // add $ in the end to detect if this input is empty
-        input += '$';
+        // add &$ in the end to detect if this input is empty
+        input += "&$";
         // delete the front space  
         CutFrontSpaceOfInput();
 
@@ -51,9 +52,9 @@ void Program(){
             return;
         }
 
-        if(input[0] == '$'){}
+        if(input[0] == '&' && input[1] == '$'){}
         else {
-            input = input.substr(0, input.size()-1);
+            input = input.substr(0, input.size()-2);
             Exps();
             if(!error) {
                 // all valid token
@@ -73,8 +74,8 @@ void Program(){
 }
 
 void Exp(){
+    CutFrontSpaceOfInput();
     if(!error && input.length() != 0) {
-        CutFrontSpaceOfInput();
         // Exp -> INT
         if( isdigit(input[0]) || ((input[0] == '+' || input[0] == '-') && isdigit(input[1])) ) {
             if(!check("INT")) {
@@ -125,7 +126,7 @@ bool check(string t) {
         }
         else {
             // // cout << "Not INT in check:" << input << endl;
-            while(input[int_length] != ' ' && input[int_length] != '+' && input[int_length] != '-' && input[int_length] != '*' && input[int_length] != '/') {
+            while(input[int_length] != ' ' && int_length < input.length()) {
                 int_length++;
             }
             error_token = input.substr(0, int_length);
@@ -148,6 +149,29 @@ bool check(string t) {
     }
 
     return true;
+}
+
+void evalPrefix(){
+    stack<string> s;
+    int countNumber = 0;
+
+    for(int i=0 ; i<tokenStream.size(); i++) {
+        pair<string, string> target;
+        target.first = tokenStream[i].first;
+        target.second = tokenStream[i].second;
+        if(target.first == "INT") {
+            if (countNumber == 0) {
+                s.push(target.second);
+                countNuber++;
+            }
+            else {
+
+            }
+        }
+        else if(target.first == "OPERATOR") { 
+            
+        }
+    }
 }
 
 void evalPrifix(){
@@ -212,14 +236,12 @@ void evalPrifix(){
             }
         }
     }
-    // cout << "size of s:"  << s.size() << endl;
     if(s.size() != 1)
         PrintErrorMessage(2);
     else if(error)
         PrintErrorMessage(3);
     else
         cout << s.top() << endl;
-        // cout << "result:" << s.top() << endl;
 }
 
 void CutFrontSpaceOfInput() {
