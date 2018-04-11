@@ -8,11 +8,19 @@
 #include<stack>
 using namespace std;
 
+// form string stream to token stream
 string input;
-string intger;
 vector<pair<string,string>> tokenStream;
 
-bool error;
+// check formula
+vector<pair<string,string>> tokenTmp;
+bool isDivision = false;
+int countDivisionNumber = 0;
+bool divideZero = false;
+bool illegalFormula = false;
+
+// check error token
+bool error = false;
 string error_token;
 
 void Exps();
@@ -20,9 +28,11 @@ void Exp();
 bool check(string);
 void Program();
 void CutFrontSpaceOfInput();
+void evalFormula();
+void ExpForCheck();
 void evalPrefix();
-// void evalPrefix();
 void PrintErrorMessage(int);
+void reset();
 
 int main(){
     Program();
@@ -33,7 +43,6 @@ int main(){
 void Program(){
     cout << "Welcome use our calculator!" << endl;
     while(true) {
-        error = false;
         cout << "> ";
         char tmp=' ';
         input.clear();
@@ -44,7 +53,6 @@ void Program(){
         
         // add &$ in the end to detect if this input is empty
         input += "&$";
-        // delete the front space  
         CutFrontSpaceOfInput();
 
         // detect eof
@@ -60,15 +68,15 @@ void Program(){
                 // all valid token
                 int token_size = tokenStream.size();
                 for(int i=0 ; i<token_size ; ++i) {
-                    // cout << tokenStream[i].first << " " << tokenStream[i].second << endl;
                     if(tokenStream[i].first == "INT" && tokenStream[i].second[0] == '+')
                         tokenStream[i].second.substr(1, input.size()-1);
                 }
-                // eval prifix
-                evalPrifix();
+
+                // eval formula and eval prefix
+                evalFormula();
             }
-            // erase tokens
-            tokenStream.erase(tokenStream.begin(), tokenStream.end());
+            // erase tokens and reset
+            reset();
         }
     }
 }
@@ -79,7 +87,6 @@ void Exp(){
         // Exp -> INT
         if( isdigit(input[0]) || ((input[0] == '+' || input[0] == '-') && isdigit(input[1])) ) {
             if(!check("INT")) {
-                // cout << "Error at INT" << input << endl;
                 error = true;
                 PrintErrorMessage(1);
             }
@@ -87,9 +94,9 @@ void Exp(){
         // Exp -> OPERATOR Exp Exp EOL
         else {
             if(!check("OPERATOR")) {
-                // cout << "Error at OPERATOR" << input << endl;
                 error = true;
                 PrintErrorMessage(1);
+                return;
             }
             Exp();
             Exp();
@@ -125,7 +132,6 @@ bool check(string t) {
             input = input.substr(int_length, input.size()-int_length);
         }
         else {
-            // // cout << "Not INT in check:" << input << endl;
             while(input[int_length] != ' ' && int_length < input.length()) {
                 int_length++;
             }
@@ -134,13 +140,15 @@ bool check(string t) {
         }
     }
     else if(t == "OPERATOR") {
+        // operator is valid
         if(input[0] == '+' || input[0] == '-' || input[0] == '*' || input[0] == '/') {
             tokenStream.push_back(make_pair(t, input.substr(0,1)));
             input = input.substr(1, input.size()-1);
         }
+        // not a operator
         else {
             int len = 0;
-            while(input[len] != ' ') {
+            while(input[len] != ' ' && len < input.length()) {
                 len++;
             }
             error_token = input.substr(0, len);
@@ -151,30 +159,59 @@ bool check(string t) {
     return true;
 }
 
-void evalPrefix(){
-    stack<string> s;
-    int countNumber = 0;
-
-    for(int i=0 ; i<tokenStream.size(); i++) {
-        pair<string, string> target;
-        target.first = tokenStream[i].first;
-        target.second = tokenStream[i].second;
-        if(target.first == "INT") {
-            if (countNumber == 0) {
-                s.push(target.second);
-                countNuber++;
-            }
+void ExpForCheck(){
+    if(tokenTmp.size() > 0) {
+        if(tokenTmp[0].first == "OPERATOR") {
+            if(tokenTmp[0].second == "/") 
+                isDivision = true;
             else {
-
+                isDivision = false;
+                countDivisionNumber = 0;
             }
-        }
-        else if(target.first == "OPERATOR") { 
             
+            tokenTmp.erase(tokenTmp.begin());
+            
+            if(!divideZero)
+                ExpForCheck();
+            if(tokenTmp.size() == 0) {
+                illegalFormula = true;
+                return;
+            }
+            if(!divideZero)
+                ExpForCheck();
+        }
+        else {
+            if(isDivision) {
+                if(countDivisionNumber == 1 && tokenTmp[0].second == "0") {
+                    divideZero = true;
+                    return;
+                }
+                else 
+                    countDivisionNumber++;
+            }
+            tokenTmp.erase(tokenTmp.begin());
         }
     }
+    
 }
 
-void evalPrifix(){
+
+void evalFormula(){
+    tokenTmp.assign(tokenStream.begin(), tokenStream.end());
+    
+    ExpForCheck();
+    if(illegalFormula) {
+        PrintErrorMessage(2);
+        return;
+    }
+    if(divideZero) {
+        PrintErrorMessage(3);
+        return;
+    }
+    evalPrefix();
+}
+
+void evalPrefix(){
     stack<int> s;
 
     for(int i=tokenStream.size() ; i>0 ; --i) {
@@ -192,7 +229,6 @@ void evalPrifix(){
         }
         else if(target.first == "OPERATOR") {
             if(s.size()<2) {
-                // cout << "illegal cause stack size too small" << endl;
                 PrintErrorMessage(2);
                 return;
             }
@@ -222,13 +258,10 @@ void evalPrifix(){
                 s.pop();
                 int y = s.top();
                 s.pop();
-                // cout << x << y << endl;
                 if(y == 0) {
-                    // cout << "divide 0 !!" << endl;
                     error = true;
                     // push as trash
                     s.push(x);
-                    // break;
                 }
                 else {
                     s.push(x/y);
@@ -241,7 +274,7 @@ void evalPrifix(){
     else if(error)
         PrintErrorMessage(3);
     else
-        cout << s.top() << endl;
+    cout << s.top() << endl;
 }
 
 void CutFrontSpaceOfInput() {
@@ -262,4 +295,15 @@ void PrintErrorMessage(int type){
             cout << "Error: Divide by ZERO!" << endl;
             break;
     }
+}
+
+void reset(){
+    error = false;
+    error_token.clear();
+    tokenStream.erase(tokenStream.begin(), tokenStream.end());
+    tokenTmp.erase(tokenTmp.begin(), tokenTmp.end());
+    isDivision = false;
+    countDivisionNumber = 0;
+    divideZero = false;
+    illegalFormula = false;
 }
