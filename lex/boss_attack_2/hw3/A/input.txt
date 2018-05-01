@@ -1,0 +1,10 @@
+int main(){
+    int cpy_i = 0;
+    int dummy = 0;
+    double real_cpy = 1.5;
+    double sum_cpy_up = 0;
+    sum_cpy_up = (cpy_i + real_cpy * 4)/2;
+    print();
+    sayhello(callhellocpy());
+    hello();
+}
