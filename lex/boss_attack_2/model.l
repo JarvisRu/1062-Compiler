@@ -7,6 +7,14 @@
     // strcmp(str1, str2) == 0 if equal
     // strchr(source, finding str) == (ptr to source + somewhere)
     // strlen(source) = string length
+    /*
+    char* cutFrontSpace(char* target){
+    while(target[0] == ' ' || target[0] == '\t') {
+        target = target+1;
+    }
+    return target;
+    }
+    */
 
     // int times = 0;
     // char ans[500][30];
