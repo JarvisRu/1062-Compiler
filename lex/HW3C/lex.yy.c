@@ -388,8 +388,7 @@ char *yytext;
 #include <string.h>
 char hex[10];
 char *find;
-int start;
-#line 393 "lex.yy.c"
+#line 392 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -543,9 +542,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 11 "hex.l"
+#line 10 "hex.l"
 
-#line 549 "lex.yy.c"
+#line 548 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -634,7 +633,7 @@ case 1:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 12 "hex.l"
+#line 11 "hex.l"
 { printf("%s\n",yytext); }
 	YY_BREAK
 case 2:
@@ -642,25 +641,25 @@ case 2:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 13 "hex.l"
-{ find=strchr(yytext,'0'); start=find-yytext; strncpy(hex,yytext+start,10); printf("%s\n",hex); }
+#line 12 "hex.l"
+{ find = strchr(yytext, '0'); strncpy(hex, find, 10); printf("%s\n", hex); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 14 "hex.l"
+#line 13 "hex.l"
 { }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 15 "hex.l"
+#line 14 "hex.l"
 { }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 16 "hex.l"
+#line 15 "hex.l"
 ECHO;
 	YY_BREAK
-#line 664 "lex.yy.c"
+#line 663 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1548,7 +1547,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 16 "hex.l"
+#line 15 "hex.l"
 
 int main(int argc, char *argv[]){
     yylex();
