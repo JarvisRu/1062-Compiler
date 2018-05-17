@@ -22,9 +22,9 @@
 ## Compile ( Windows )
 ### Lex
 ```= 
-> flex -o example example.l       # create example.yy.c
-> gcc -o example example.yy.c     # create example.exe
-> cat input.txt ./ example
+> flex example.l                 # create lex.yy.c
+> gcc -o example lex.yy.c        # create example.exe
+> cat input.txt | ./example.exe  # using input.txt as input for example.exe
 ```
 ### Lex + Yacc
 ```=
