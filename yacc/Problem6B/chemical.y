@@ -24,24 +24,26 @@ extern "C"
 %type <ele> expr
 %type <ele> lhs
 %type <ele> rhs
-%type <ele> com
-%type <ele> ele
+%type <ele> comp
+%type <ele> elem
 
 %%
 
-line    : expr                      { cout << "ALL " << $1; }
+line    : expr                      { cout << "ACCEPT!!" << endl; }
         ;
-expr    : lhs EQUAL rhs             { cout << "First " << $1 << " Second " << $3 << endl; }
+expr    : lhs EQUAL rhs             { cout << "lhs " << $1 << "| rhs " << $3 << endl; }
         ;
-lhs     : com                  { cout << "LHS COMPOUND " << $1 << endl;}
+lhs     : lhs '+' lhs                       { cout << "LHS COMPOUND " << $1 << endl;}
+        | comp                               { cout << "lfs for one " << $1 << endl; }
         ;
-rhs     : com                  { cout << "RHS COMPOUND " << $1 << endl;}
+rhs     : rhs '+' rhs                      { cout << "RHS COMPOUND " << $1 << endl;}
+        | comp                              { cout << "rhs for one " << $1 << endl; }
         ;
-com     : ele com
-        | 
+comp    : comp elem                  { cout << "look " << $1 << "| " << $2 << endl; }
+        | elem                       { cout << "in" << $1 << endl; }
         ;
-ele     : ELEMENT NUMBER            { cout << "element and number " << $1 << $2 << endl;}
-        | ELEMENT                   { cout << "Only element " << $1 << endl;}
+elem    : ELEMENT NUMBER            { cout << "element & number " << $1[0] << " | " << $2 << endl;}
+        | ELEMENT                   { cout << "Only element " << $1[0] << endl;}
         ;   
 
 %%

@@ -13,10 +13,10 @@ eol     \n
 
 %%
 
-{element}   { yylval.ele = yytext;        return ELEMENT; }
-{number}    { yylval.ival = atoi(yytext); return NUMBER; }
-"->"        { yylval.op = yytext;         return EQUAL; }
-"+"         { return yytext[0]; }
+{element}   { printf("match e:%s\n",yytext);  yylval.ele = yytext;        return ELEMENT; }
+{number}    { printf("match n:%s\n",yytext);  yylval.ival = atoi(yytext); return NUMBER; }
+"->"        { printf("match =:%s\n",yytext);  yylval.op = yytext;         return EQUAL; }
+"[+()]"         { return yytext[0]; }
 .           { }
 {eol}       { return(0); }
 
