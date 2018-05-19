@@ -25,7 +25,6 @@ void updateForElement(string, bool);
 void updateForInner(int);
 void updateForCompound(int);
 void printResult();
-void printInner();
 %}
 
 %union {
@@ -50,43 +49,36 @@ void printInner();
 
 %%
 
-line    : expr                              { cout << "ACCEPT!!" << endl; printResult(); }
+line    : expr                          {  printResult(); }
         ;
 expr    : lhs EQUAL rhs             
         ;
-lhs     : lhs PLUS lhs                      { cout << "LHS ALL COMPLETE !!" << endl;  }
-        | comp                              { cout << "New lhs complete" << endl;                       updateForCompound(1); }
-        | NUMBER comp                       { cout << "New lfs with number complete | " << $1 << endl;  updateForCompound($1); }
+lhs     : lhs PLUS lhs                       
+        | comp                          {  updateForCompound(1);  }
+        | NUMBER comp                   {  updateForCompound($1); }
         ;
-rhs     : rhs PLUS rhs                      { cout << "RHS ALL COMPLETE !!" << endl;}
-        | comp                              { cout << "New rhs complete" << endl; inLHS = false;                      updateForCompound(1); }
-        | NUMBER comp                       { cout << "New rhs with number complete | " << $1 << endl; inLHS = false; updateForCompound($1);}
+rhs     : rhs PLUS rhs                     
+        | comp                          { inLHS = false; updateForCompound(1); }
+        | NUMBER comp                   { inLHS = false; updateForCompound($1);}
         ;
 comp    : comp elem                       
         | elem                           
-        | comp left comp right NUMBER       { cout << "New (comp) with number "  << $5 << endl; printInner(); updateForInner($5); printInner();}
-        | comp left comp right              { cout << "New (comp) " << endl;                    printInner(); updateForInner(1);  printInner();}
+        | comp left comp right NUMBER   {  updateForInner($5); }
+        | comp left comp right          {  updateForInner(1);  }
         |
         ;
-elem    : ELEMENT_NUM                       { cout << "New eleN " << $1 << endl;                updateForElement($1, true);  }
-        | ELEMENT                           { cout << "New ele " << $$ << " | " << 1 << endl;   updateForElement($1, false); }
+elem    : ELEMENT_NUM                   { updateForElement($1, true);  }
+        | ELEMENT                       { updateForElement($1, false); }
         ;   
-left    : LEFT  { cout << "( occurs!!" << endl; innerLevel++;}
+left    : LEFT  {  innerLevel++; }
         ;
-right   : RIGHT { cout << ") occurs!!" << endl; innerLevel--;}
+right   : RIGHT {  innerLevel--; }
         ;
 
 %%
 
 void yyerror (const char *message) {
     cout << "Invalid format";
-}
-
-void printInner(){
-    cout << "=========Inner " << innerLevel << "=========" << endl;
-    for(it = innerMap.begin() ; it != innerMap.end() ; ++it) {
-        cout << it->first << " | " << it->second << endl;
-    }   
 }
 
 void updateForElement(string ele, bool has_num) {
@@ -143,7 +135,6 @@ void updateForInner(int num) {
             innerMap[it->first] = num * it->second;
         }
     }
-    
 }
 
 void updateForCompound(int num) {
@@ -171,15 +162,6 @@ void updateForCompound(int num) {
 }
 
 void printResult() {
-    cout << "=========LHS=========" << endl;
-    for(it = lhsMap.begin() ; it != lhsMap.end() ; ++it) {
-        cout << it->first << " | " << it->second << endl;
-    }    
-    cout << "=========RHS=========" << endl;
-    for(it = rhsMap.begin() ; it != rhsMap.end() ; ++it) {
-        cout << it->first << " | " << it->second << endl;
-    }
-    cout << "=========Result=========" << endl;
     // traverse LHS
     for(it = lhsMap.begin() ; it != lhsMap.end() ; ++it) {
         it2 = rhsMap.find(it->first);
