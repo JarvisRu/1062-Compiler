@@ -1,6 +1,7 @@
 %{
 #include<iostream>  
 #include<string>  
+#include<sstream>  
 #include<stdio.h>
 #include<map>
 using namespace std;
@@ -11,17 +12,19 @@ extern "C"
     void yyerror(const char *s);  
 }  
 
-map<char,int> lhsMap;
-map<char,int> rhsMap;
-map<char,int> tmpMap;
-map<char,int>::iterator it, it2;
+map<string,int> lhsMap;
+map<string,int> rhsMap;
+map<string,int> tmpMap;
+map<string,int> innerMap;
+map<string,int> resultMap;
+map<string,int>::iterator it, it2;
 bool inLHS = true;
 bool inner = false;
 
-void updateForElement(char, int);
-void updateForInner(char, int);
+void updateForElement(string, bool);
+void updateForInner(int);
 void updateForCompound(int);
-void print();
+void printResult();
 %}
 
 %union {
@@ -30,6 +33,7 @@ void print();
     char* op;
 }
 %token<ele> ELEMENT
+%token<ele> ELEMENT_NUM
 %token<ival> NUMBER
 %token<op> EQUAL
 %token<op> PLUS
@@ -45,45 +49,83 @@ void print();
 
 %%
 
-line    : expr                      { cout << "ACCEPT!!" << endl; print(); }
+line    : expr                      { cout << "ACCEPT!!" << endl; printResult(); }
         ;
-expr    : lhs EQUAL rhs             {  }
+expr    : lhs EQUAL rhs             
         ;
-lhs     : lhs PLUS lhs                       { cout << "LHS ALL COMPLETE !!" << endl; inLHS = false; }
+lhs     : lhs PLUS lhs                       { cout << "LHS ALL COMPLETE !!" << endl;  }
         | comp                               { cout << "New lhs complete" << endl; updateForCompound(1); }
         | NUMBER comp                        { cout << "New lfs with number complete | " << $1 << endl; updateForCompound($1); }
         ;
 rhs     : rhs PLUS rhs                      { cout << "RHS ALL COMPLETE !!" << endl;}
-        | comp                              { cout << "New rhs complete" << endl; updateForCompound(1);}
-        | NUMBER comp                        { cout << "New rhs with number complete | " << $1 << endl; updateForCompound($1);}
+        | comp                              { cout << "New rhs complete" << endl; inLHS = false; updateForCompound(1);}
+        | NUMBER comp                        { cout << "New rhs with number complete | " << $1 << endl; inLHS = false; updateForCompound($1);}
         ;
-comp    : comp elem                       {  }
-        | elem                            {  }
-        | comp left comp right NUMBER     { cout << "New (comp) with number "  << $5 << endl; }
-        | comp left comp right            { cout << "New (comp) " << endl; }
+comp    : comp elem                       
+        | elem                           
+        | comp left comp right NUMBER     { cout << "New (comp) with number "  << $5 << endl; updateForInner($5); }
+        | comp left comp right            { cout << "New (comp) " << endl; updateForInner(1); }
+        |
         ;
-elem    : ELEMENT NUMBER            { cout << "New ele " << $1[0] << " | " << $2 << endl; updateForElement($1[0], $2); }
-        | ELEMENT                   { cout << "New ele " << $1[0] << " | " << 1 << endl; updateForElement($1[0], 1);}
+elem    : ELEMENT_NUM               { cout << "New eleN " << $1 << endl; updateForElement($1, true); }
+        | ELEMENT                   { cout << "New ele " << $$ << " | " << 1 << endl; updateForElement($1, false);}
         ;   
-left    : LEFT  { cout << "( occurs!!" << endl; }
+left    : LEFT  { cout << "( occurs!!" << endl; inner = true;}
         ;
-right   : RIGHT { cout << ") occurs!!" << endl; }
+right   : RIGHT { cout << ") occurs!!" << endl; inner = false;}
         ;
 
 %%
 
 void yyerror (const char *message) {
-    cerr << "Invalid format";
+    cout << "Invalid format";
 }
 
-void updateForElement(char ele, int num) {
-    cout << "====update element=====" << endl;
-    it = tmpMap.find(ele);
-    if (it != tmpMap.end()) {
-        tmpMap[ele] += num;
-    } else {
-        tmpMap[ele] = num;
+void updateForElement(string ele, bool has_num) {
+    int num = 1;
+    if (has_num) {
+        string ivalue;
+        stringstream ss;
+        if(ele[1] >= 'a' && ele[1] <= 'z') {
+            ivalue = ele.substr(2, ele.length()-2);
+            ele = ele.substr(0, 2);
+        }
+        else {
+            ivalue = ele.substr(1, ele.length()-1);
+            ele = ele[0];
+        }
+        ss << ivalue;
+        ss >> num;
     }
+    cout << "====update element=====" << endl;
+    if(!inner) {
+        it = tmpMap.find(ele);
+        if (it != tmpMap.end()) {
+            tmpMap[ele] += num;
+        } else {
+            tmpMap[ele] = num;
+        }
+    } else {
+        it = innerMap.find(ele);
+        if (it != innerMap.end()) {
+            innerMap[ele] += num;
+        } else {
+            innerMap[ele] = num;
+        }
+    }
+}
+
+void updateForInner(int num) {
+    for(it = innerMap.begin() ; it != innerMap.end() ; ++it) {
+        it2 = tmpMap.find(it->first);
+        if(it2 != tmpMap.end()) {
+            tmpMap[it->first] += num * it->second;
+        } else {
+            tmpMap[it->first] = num * it->second;
+        }
+    }
+
+    innerMap.clear();
 }
 
 void updateForCompound(int num) {
@@ -106,10 +148,11 @@ void updateForCompound(int num) {
             }
         }
     }  
+
     tmpMap.clear();
 }
 
-void print() {
+void printResult() {
     cout << "=========LHS=========" << endl;
     for(it = lhsMap.begin() ; it != lhsMap.end() ; ++it) {
         cout << it->first << " | " << it->second << endl;
@@ -117,7 +160,34 @@ void print() {
     cout << "=========RHS=========" << endl;
     for(it = rhsMap.begin() ; it != rhsMap.end() ; ++it) {
         cout << it->first << " | " << it->second << endl;
-    }    
+    }
+    cout << "=========Result=========" << endl;
+    // traverse LHS
+    for(it = lhsMap.begin() ; it != lhsMap.end() ; ++it) {
+        it2 = rhsMap.find(it->first);
+        // find target element in RHS
+        if(it2 != rhsMap.end()) {
+            if(it->second != it2->second) {
+                resultMap[it->first] = it->second - it2->second;
+            }
+            // erase this element in rhsMap
+            rhsMap.erase(it->first); 
+        } else {
+            resultMap[it->first] = it->second;
+        }
+        // erase this element in lhsMap
+        lhsMap.erase(it->first);
+    }
+    // traverse remaining RHS
+    for(it = rhsMap.begin() ; it != rhsMap.end() ; ++it) {
+        resultMap[it->first] = -1 * it->second;
+        // erase this element
+        rhsMap.erase(it->first);
+    }
+    // order result in lexicographic order
+    for(it = resultMap.begin() ; it != resultMap.end() ; ++it) {
+        cout << it->first << " " << it->second << endl;
+    }
 }
 
 int main(int argc, char *argv[]) {
