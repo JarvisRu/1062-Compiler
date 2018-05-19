@@ -19,14 +19,21 @@
 - [BA01 - Scientific Notation.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013817/Scientific.Notation.pdf)
 - [BA02 - Table.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013818/Table.pdf)
 
-## Compile ( Windows )
+## Compile
 ### Lex
-```= 
-> flex example.l                 # create lex.yy.c
-> gcc -o example lex.yy.c        # create example.exe
-> cat input.txt | ./example.exe  # using input.txt as input for example.exe
-```
-### Lex + Yacc
 ```=
-
+flex example.l                # create lex.yy.c
+gcc -o example lex.yy.c       # compile, output as example.exe
+# windows
+cat input.txt | ./example.exe # using input.txt as input for example.exe in Windows
+# Linux
+./example.out < input.txt     # using input.txt as input for example.out in Linux
+```
+### Lex + Yacc(C++)
+```
+# Linux
+bison -d examle.y             # create example.tab.h and example.tab.c
+flex example.l                # create lex.yy.c
+g++ lex.yy.c example.tab.c    # compile, output as a.out
+./a.out < input.txt           # using input.txt as input for a.out in Linux
 ```
