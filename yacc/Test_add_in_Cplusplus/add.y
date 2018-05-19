@@ -17,8 +17,8 @@
 
 line    : expr                  { cout << $1; }
         ;
-expr    : expr PLUS expr        { $$ = $1 + $3; }
-        | NUMBER
+expr    : expr PLUS expr        { cout << "Look " << $1 << " | " << $3 << endl; $$ = $1 + $3; }
+        | NUMBER                { cout << "in N " << $1 << endl; }
         ;
 %%
 void yyerror (const char *message)
