@@ -23,7 +23,6 @@
     Matrix* newMatrix(int, int);
     Matrix* transpose(Matrix*);
     Matrix* calculate(Matrix*, Matrix*, Operator);
-    void printM(Matrix*);
     void printResult();
 }
 %{
@@ -47,17 +46,17 @@
 %type <mat> exp
 
 %%
-final   :   expr                              { printResult();}              
-expr    :   expr PLUS exp                      { $$ = calculate($1, $3, $2); cout << "Plus Occurs "; printM($$);}  
-        |   expr SUB exp                       { $$ = calculate($1, $3, $2); cout << "Sub Occurs "; printM($$);}  
-        |   exp                                { cout << "exp to expr "; printM($1); }
+final   :   expr                            { printResult();}              
+expr    :   expr PLUS exp                   { $$ = calculate($1, $3, $2); }  
+        |   expr SUB exp                    { $$ = calculate($1, $3, $2); }  
+        |   exp                             {  }
         ;
-exp     :   exp MUL mat                     { $$ = calculate($1, $3, $2); cout << "Mul Occurs "; printM($$); }
-        |   mat                             {  cout << "mat to exp "; printM($1); }
+exp     :   exp MUL mat                     { $$ = calculate($1, $3, $2); }
+        |   mat                             { }
         ;
 mat     :   '(' expr ')'                    { $$ = $2;  }
-        |   mat TRANS                       { cout << "Transpose" << endl; $$ = transpose($1); printM($$); }
-        |   '[' NUMBER ',' NUMBER ']'      { $$ = newMatrix($2,$4); printM($$); }
+        |   mat TRANS                       { $$ = transpose($1);  }
+        |   '[' NUMBER ',' NUMBER ']'       { $$ = newMatrix($2,$4); }
         ;
 %%
 
@@ -103,10 +102,6 @@ Matrix* transpose(Matrix *m){
     m->left_value = m->right_value;
     m->right_value = tmp;
     return m;
-}
-
-void printM(Matrix *m) {
-    cout << "Mat : [" << m->left_value << "," << m->right_value << "]" << endl;
 }
 
 void printResult() {
