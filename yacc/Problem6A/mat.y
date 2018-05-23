@@ -77,7 +77,7 @@ Matrix* calculate(Matrix *lMatrix, Matrix *rMatrix, Operator op){
             }
         }
     } else {
-        if(lMatrix->left_value == rMatrix->right_value && lMatrix->right_value == rMatrix->left_value) {
+        if(lMatrix->right_value == rMatrix->left_value) {
             m->left_value = lMatrix->left_value;
             m->right_value = lMatrix->left_value;
         } else {

@@ -13,7 +13,7 @@ eol     \n
 space   [\t\r ]
 
 %%
-{number}            {   pos += yyleng;  yylval.ival = atoi(yytext);   return NUMBER; }
+{number}            {   pos += yyleng; yylval.ival = atoi(yytext); return NUMBER; }
 [\[\],\(\)]         {   pos += 1;       return yytext[0];  }
 {space}             {   pos += 1; }
 "+"                 {   yylval.op.type = yytext; yylval.op.pos = pos; pos += 1; return PLUS; }
