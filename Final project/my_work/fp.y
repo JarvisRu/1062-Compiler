@@ -3,6 +3,7 @@
     #include <string>  
     #include <cstdlib>
     using namespace std;
+    #define NOT_EQUAL -12321
 
     extern "C"
     {   
@@ -20,16 +21,16 @@
     
     Node* newNode(Node*, Node*, string, int = 0, string = " ", bool = false);
     void traverseAST(Node*);
-    int op_action_int(string);      // for operator + *
-    bool op_action_bool(string);    // for operator Equal Or Not
-    void printNodeInfo(Node*);     // for debug
+    int num_op_action(string);      // for operator Plus Mul Equal
+    bool bool_op_action(string);    // for operator And Or Not
+    void printNodeInfo(Node*);      // for debug
 }
 
 %{
     #include <vector>
     using namespace std;
-    vector<int> action_int;         // for result of EXPS for + *
-    vector<bool> action_bool;       // for result of EXPS for Equal Or Not
+    vector<int> num_action;         // store for EXPS : Plus Mul Equal
+    vector<bool> bool_action;       // store for EXPS : And Or Not
 %}
 
 
@@ -84,7 +85,7 @@ NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << $3
             |   '(' Mod EXP EXP ')'         { cout << "New node for mod " << $3->num << " % " << $4->num << endl; $$ = newNode($3, $4, "Mod"); }
             |   '(' Greater EXP EXP ')'     { cout << "New node for greater " << $3->num << " > " << $4->num << endl; $$ = newNode($3, $4, "Greater"); }
             |   '(' Smaller EXP EXP ')'     { cout << "New node for smaller " << $3->num << " < " << $4->num << endl; $$ = newNode($3, $4, "Smaller"); }
-            |   '(' Equal EXP EXPS ')'      { }
+            |   '(' Equal EXP EXPS ')'      { cout << "New node for equal " << $3->num << " == " << $4->num << endl; $$ = newNode($3, $4, "Equal");}
             ;
 LOGICAL-OP  :   '(' And EXP EXPS ')'        { }
             |   '(' Or EXP EXPS ')'         { }
@@ -127,16 +128,30 @@ void traverseAST(Node *node) {
     else if(node->type == "Plus") {
         traverseAST(node->left);
         traverseAST(node->right);
-        node->num = (node->right->type == "EXPS") ? node->left->num + op_action_int(node->type) : node->left->num + node->right->num;
+        node->num = (node->right->type == "EXPS") ? node->left->num + num_op_action(node->type) : node->left->num + node->right->num;
         cout << "[ Traverse Node - Plus ]: " << node->num << endl;
-        action_int.clear();
+        num_action.clear();
     } 
     else if(node->type == "Mul") {
         traverseAST(node->left);
         traverseAST(node->right);
-        node->num = (node->right->type == "EXPS") ? node->left->num * op_action_int(node->type) : node->left->num * node->right->num;
+        node->num = (node->right->type == "EXPS") ? node->left->num * num_op_action(node->type) : node->left->num * node->right->num;
         cout << "[ Traverse Node - Mul ]: " << node->num << endl;
-        action_int.clear();
+        num_action.clear();
+    } 
+    else if(node->type == "Equal") {
+        traverseAST(node->left);
+        traverseAST(node->right);
+        if(node->right->type == "EXPS") {
+            if(num_op_action(node->type) == NOT_EQUAL)
+                node->bval = 0;
+            else
+                node->bval = (node->left->num == num_op_action(node->type))? 1 : 0;
+        } else {
+             node->bval = (node->left->num ==  node->right->num)? 1 : 0;
+        }
+        cout << "[ Traverse Node - Equal ]: " << node->bval << endl;
+        num_action.clear();
     } 
     // ( Operator EXP EXP )
     else if(node->type == "Minus") {
@@ -183,20 +198,26 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         traverseAST(node->right);
         cout << "[ Traverse Node - EXPS ] " << node->left->num << " | " << node->right->num << endl;
-        action_int.push_back(node->left->num);
-        action_int.push_back(node->right->num);
+        num_action.push_back(node->left->num);
+        num_action.push_back(node->right->num);
     } 
 
 }
 
-int op_action_int(string type){
+int num_op_action(string type){
     int res = (type == "Mul")? 1 : 0;
+    if(type == "Equal")
+        res = num_action[0];
 
-    for(int i = 0 ; i < action_int.size(); i++) {
+    for(int i = 0 ; i < num_action.size(); i++) {
         if(type == "Plus")
-            res += action_int[i];
+            res += num_action[i];
         else if(type == "Mul")
-            res *= action_int[i];
+            res *= num_action[i];
+        else if(type == "Equal") {
+            if(res != num_action[i])
+                return NOT_EQUAL;
+        }
     }
     cout << "OP_ACTION_INT RES: " << res << endl;
     return res;
