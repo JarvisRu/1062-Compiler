@@ -2,7 +2,7 @@
     #include <iostream>  
     #include <string>  
     #include <cstdlib>
-    using namespace std;  
+    using namespace std;
 
     extern "C"
     {   
@@ -20,9 +20,15 @@
     
     Node* newNode(Node*, Node*, string, int = 0, string = " ", bool = false);
     void traverseAST(Node*);
+    int op_action_int(string);      // for operator + *
+    bool op_action_bool(string);    // for operator Equal Or Not
 }
+
 %{
-    
+    #include <vector>
+    using namespace std;
+    vector<int> action_int;         // for result of EXPS for + *
+    vector<bool> action_bool;       // for result of EXPS for Equal Or Not
 %}
 
 
@@ -58,8 +64,8 @@ STMT        :   EXP                         { cout << "EXP -> STMT | type " << $
             ;
 DEF-STMT    :   '(' DEFINE VARIABLE EXP ')' { }
             ;
-PRINT-STMT  :   '(' PRINT_NUM EXP ')'       { cout << "New node for PRINT_NUM" << endl; $$ = newNode($3, NULL, "PRINT_NUM"); }
-            |   '(' PRINT_BOOL EXP ')'      { cout << "New node for PRINT_BOOL" << endl; $$ = newNode($3, NULL, "PRINT_BOOL");}
+PRINT-STMT  :   '(' PRINT_NUM EXP ')'       { cout << "New node for PRINT_NUM" << endl;     $$ = newNode($3, NULL, "PRINT_NUM"); }
+            |   '(' PRINT_BOOL EXP ')'      { cout << "New node for PRINT_BOOL" << endl;    $$ = newNode($3, NULL, "PRINT_BOOL");}
             ;
 EXPS        :   EXP EXPS                    {  cout << "EXP EXPS -> EXPS" << endl;                  $$ = newNode($1, $2, "EXPS"); }
             |   EXP                         {  cout << "EXP -> EXPS | type " << $1->type << endl;   $$ = $1;  }
@@ -70,11 +76,11 @@ EXP         :   bool_val                    { cout << "Node bool_val -> EXP " <<
             |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl; $$ = $1;}
             |   LOGICAL-OP                  { cout << "LOGICAL-OPP -> EXP " << endl; $$ = $1;}
             ;
-NUM-OP      :   '(' Plus EXP EXPS ')'       { }
-            |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->num << "-" << $4->num << endl; $$ = newNode($3, $4, "Minus");  }
-            |   '(' Mul EXP EXPS ')'        { }
-            |   '(' Div EXP EXP ')'         { cout << "New node for div " << $3->num << "div" << $4->num << endl; $$ = newNode($3, $4, "Div"); }
-            |   '(' Mod EXP EXP ')'         { cout << "New node for mod " << $3->num << "mod" << $4->num << endl; $$ = newNode($3, $4, "Mod"); }
+NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << $3->num << " + " << $4->num << endl; $$ = newNode($3, $4, "Plus"); }
+            |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->num << " - " << $4->num << endl; $$ = newNode($3, $4, "Minus"); }
+            |   '(' Mul EXP EXPS ')'        { cout << "New node for mul " << $3->num << " * " << $4->num << endl; $$ = newNode($3, $4, "Mul");}
+            |   '(' Div EXP EXP ')'         { cout << "New node for div " << $3->num << " / " << $4->num << endl; $$ = newNode($3, $4, "Div"); }
+            |   '(' Mod EXP EXP ')'         { cout << "New node for mod " << $3->num << " % " << $4->num << endl; $$ = newNode($3, $4, "Mod"); }
             |   '(' Greater EXP EXP ')'     { }
             |   '(' Smaller EXP EXP ')'     { }
             |   '(' Equal EXP EXPS ')'      { }
@@ -99,7 +105,6 @@ Node* newNode(Node *l, Node *r, string type, int num, string name, bool bval) {
     n->num = num;
     n->name = name;
     n->bval = bval;
-    cout << "New Node done" << endl;
     return n;
 }
 
@@ -116,6 +121,21 @@ void traverseAST(Node *node) {
     } 
     else if(node->type == "id") {
         cout << "[ Traverse Node - ID ]: " << node->name << endl;
+    } 
+    // ( Operator EXP EXPS )
+    else if(node->type == "Plus") {
+        traverseAST(node->left);
+        traverseAST(node->right);
+        node->num = (node->right->type == "EXPS") ? node->left->num + op_action_int(node->type) : node->left->num + node->right->num;
+        cout << "[ Traverse Node - Plus ]: " << node->num << endl;
+        action_int.clear();
+    } 
+    else if(node->type == "Mul") {
+        traverseAST(node->left);
+        traverseAST(node->right);
+        node->num = (node->right->type == "EXPS") ? node->left->num * op_action_int(node->type) : node->left->num * node->right->num;
+        cout << "[ Traverse Node - Mul ]: " << node->num << endl;
+        action_int.clear();
     } 
     // ( Operator EXP EXP )
     else if(node->type == "Minus") {
@@ -145,7 +165,28 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         cout << "[ Traverse Node - PRINT_BOOL RESULT ]: " << node->left->bval << endl;
     }
-    
+    // EXPS
+    else if(node->type == "EXPS") {
+        traverseAST(node->left);
+        traverseAST(node->right);
+        cout << "[ Traverse Node - EXPS ] " << node->left->num << " | " << node->right->num << endl;
+        action_int.push_back(node->left->num);
+        action_int.push_back(node->right->num);
+    } 
+
+}
+
+int op_action_int(string type){
+    int res = (type == "Mul")? 1 : 0;
+
+    for(int i = 0 ; i < action_int.size(); i++) {
+        if(type == "Plus")
+            res += action_int[i];
+        else if(type == "Mul")
+            res *= action_int[i];
+    }
+    cout << "OP_ACTION_INT RES: " << res << endl;
+    return res;
 }
 
 int main(int argc, char *argv[]) {

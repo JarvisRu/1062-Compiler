@@ -10,7 +10,7 @@ digit       [0-9]
 digits      [1-9]{digit}*
 
 /* Token Definitions */
-number      (0|{digit}|-{digit})
+number      (0|{digits}|-{digits})
 id          {letter}({letter}|{digit}|-)*
 bool        #t|#f
 
