@@ -22,6 +22,7 @@
     void traverseAST(Node*);
     int op_action_int(string);      // for operator + *
     bool op_action_bool(string);    // for operator Equal Or Not
+    void printNodeInfo(Node*);     // for debug
 }
 
 %{
@@ -53,24 +54,24 @@
 %type <node> NUM-OP LOGICAL-OP
 
 %%
-PROGRAM     :   STMTS                       { cout << "Accepted, Root type " << $1->type << endl; traverseAST($1); }
+PROGRAM     :   STMTS                       { cout << "Accepted, Root |"; printNodeInfo($1); traverseAST($1); }
             ;
 STMTS       :   STMT STMTS
-            |   STMT                        { cout << "STMT -> STMTS | type " << $1->type << endl; $$ = $1;  }
+            |   STMT                        { cout << "STMT -> STMTS | "; $$ = $1; printNodeInfo($$); }
             ;
-STMT        :   EXP                         { cout << "EXP -> STMT | type " << $1->type << endl; $$ = $1;  }
-            |   DEF-STMT                    { cout << "D-STMT -> STMT | type " << $1->type << endl; $$ = $1;  }
-            |   PRINT-STMT                  { cout << "P-STMT -> STMT | type " << $1->type << endl; $$ = $1;  }
+STMT        :   EXP                         { cout << "EXP -> STMT | ";  $$ = $1; printNodeInfo($$); }
+            |   DEF-STMT                    { cout << "D-STMT -> STMT | "; $$ = $1; printNodeInfo($$); }
+            |   PRINT-STMT                  { cout << "P-STMT -> STMT | "; $$ = $1; printNodeInfo($$); }
             ;
 DEF-STMT    :   '(' DEFINE VARIABLE EXP ')' { }
             ;
 PRINT-STMT  :   '(' PRINT_NUM EXP ')'       { cout << "New node for PRINT_NUM" << endl;     $$ = newNode($3, NULL, "PRINT_NUM"); }
             |   '(' PRINT_BOOL EXP ')'      { cout << "New node for PRINT_BOOL" << endl;    $$ = newNode($3, NULL, "PRINT_BOOL");}
             ;
-EXPS        :   EXP EXPS                    {  cout << "EXP EXPS -> EXPS" << endl;                  $$ = newNode($1, $2, "EXPS"); }
-            |   EXP                         {  cout << "EXP -> EXPS | type " << $1->type << endl;   $$ = $1;  }
+EXPS        :   EXP EXPS                    {  cout << "EXP EXPS -> EXPS" << endl;          $$ = newNode($1, $2, "EXPS"); }
+            |   EXP                         {  cout << "EXP -> EXPS | ";  $$ = $1; printNodeInfo($$); }
             ;
-EXP         :   bool_val                    { cout << "Node bool_val -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "bool_val", 0, "", $1); }
+EXP         :   bool_val                    { cout << "Node bool_val -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "bool_val", 0, " ", $1); }
             |   number                      { cout << "Node number -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "number", $1); }
             |   VARIABLE                    { }
             |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl; $$ = $1;}
@@ -117,7 +118,7 @@ void traverseAST(Node *node) {
         cout << "[ Traverse Node - Number ]: " << node->num << endl;
     } 
     else if(node->type == "bool_val") {
-        cout << "[ Traverse Node - Bool_val ]: " << node->name << endl;
+        cout << "[ Traverse Node - Bool_val ]: " << node->bval << endl;
     } 
     else if(node->type == "id") {
         cout << "[ Traverse Node - ID ]: " << node->name << endl;
@@ -187,6 +188,16 @@ int op_action_int(string type){
     }
     cout << "OP_ACTION_INT RES: " << res << endl;
     return res;
+}
+
+void printNodeInfo(Node *node) {
+    if(node->type == "bool_val") {
+        cout << "Type: bool |" << node->bval << endl;
+    } else if (node->type == "number") {
+        cout << "Type: number |" << node->num << endl;
+    } else {
+        cout << "Type: " << node->type << endl;
+    }
 }
 
 int main(int argc, char *argv[]) {
