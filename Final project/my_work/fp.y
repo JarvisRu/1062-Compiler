@@ -54,7 +54,7 @@
 %type <node> NUM-OP LOGICAL-OP
 
 %%
-PROGRAM     :   STMTS                       { cout << "Accepted, Root |"; printNodeInfo($1); traverseAST($1); }
+PROGRAM     :   STMTS                       { cout << "Accepted, Root | "; printNodeInfo($1); traverseAST($1); }
             ;
 STMTS       :   STMT STMTS
             |   STMT                        { cout << "STMT -> STMTS | "; $$ = $1; printNodeInfo($$); }
@@ -82,8 +82,8 @@ NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << $3
             |   '(' Mul EXP EXPS ')'        { cout << "New node for mul " << $3->num << " * " << $4->num << endl; $$ = newNode($3, $4, "Mul");}
             |   '(' Div EXP EXP ')'         { cout << "New node for div " << $3->num << " / " << $4->num << endl; $$ = newNode($3, $4, "Div"); }
             |   '(' Mod EXP EXP ')'         { cout << "New node for mod " << $3->num << " % " << $4->num << endl; $$ = newNode($3, $4, "Mod"); }
-            |   '(' Greater EXP EXP ')'     { }
-            |   '(' Smaller EXP EXP ')'     { }
+            |   '(' Greater EXP EXP ')'     { cout << "New node for greater " << $3->num << " > " << $4->num << endl; $$ = newNode($3, $4, "Greater"); }
+            |   '(' Smaller EXP EXP ')'     { cout << "New node for smaller " << $3->num << " < " << $4->num << endl; $$ = newNode($3, $4, "Smaller"); }
             |   '(' Equal EXP EXPS ')'      { }
             ;
 LOGICAL-OP  :   '(' And EXP EXPS ')'        { }
@@ -156,6 +156,18 @@ void traverseAST(Node *node) {
         traverseAST(node->right); 
         node->num = node->left->num % node->right->num;
         cout << "[ Traverse Node - Div ]: " << node->num << endl;
+    }
+    else if(node->type == "Greater") {
+        traverseAST(node->left);
+        traverseAST(node->right); 
+        node->bval = (node->left->num > node->right->num)? 1 : 0;
+        cout << "[ Traverse Node - Greater ]: " << node->bval << endl;
+    }
+    else if(node->type == "Smaller") {
+        traverseAST(node->left);
+        traverseAST(node->right); 
+        node->bval = (node->left->num < node->right->num)? 1 : 0;
+        cout << "[ Traverse Node - Smaller ]: " << node->bval << endl;
     }
     // PRINT
     else if(node->type == "PRINT_NUM") {
