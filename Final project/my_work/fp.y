@@ -14,15 +14,17 @@
     typedef struct treeNode{
         struct treeNode *left, *right;
         string type;
+        int rtype;     // return type, 0 as NUM, 1 as LOGIC, 2 as others
         int num;
         string name;
         bool bval;
     } Node; 
     
-    Node* newNode(Node*, Node*, string, int = 0, string = " ", bool = false);
+    Node* newNode(Node*, Node*, string, int = 2, int = 0, string = " ", bool = false);
     void traverseAST(Node*);
-    int num_op_action(string);      // for operator Plus Mul Equal
-    bool bool_op_action(string);    // for operator And Or Not
+    
+    int num_op_action(string);      // return result in EXPS for operator : Plus Mul Equal
+    bool bool_op_action(string);    // return result in EXPS for operator : And Or Not
     void printNodeInfo(Node*);      // for debug
 }
 
@@ -72,26 +74,26 @@ PRINT-STMT  :   '(' PRINT_NUM EXP ')'       { cout << "New node for PRINT_NUM" <
 EXPS        :   EXP EXPS                    {  cout << "EXP EXPS -> EXPS" << endl;          $$ = newNode($1, $2, "EXPS"); }
             |   EXP                         {  cout << "EXP -> EXPS | ";  $$ = $1; printNodeInfo($$); }
             ;
-EXP         :   bool_val                    { cout << "Node bool_val -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "bool_val", 0, " ", $1); }
-            |   number                      { cout << "Node number -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "number", $1); }
+EXP         :   bool_val                    { cout << "Node bool_val -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "bool_val", 1, 0, " ", $1); }
+            |   number                      { cout << "Node number -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "number", 0, $1); }
             |   VARIABLE                    { }
             |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl; $$ = $1;}
             |   LOGICAL-OP                  { cout << "LOGICAL-OPP -> EXP " << endl; $$ = $1;}
             ;
-NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << $3->num << " + " << $4->num << endl; $$ = newNode($3, $4, "Plus"); }
-            |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->num << " - " << $4->num << endl; $$ = newNode($3, $4, "Minus"); }
-            |   '(' Mul EXP EXPS ')'        { cout << "New node for mul " << $3->num << " * " << $4->num << endl; $$ = newNode($3, $4, "Mul");}
-            |   '(' Div EXP EXP ')'         { cout << "New node for div " << $3->num << " / " << $4->num << endl; $$ = newNode($3, $4, "Div"); }
-            |   '(' Mod EXP EXP ')'         { cout << "New node for mod " << $3->num << " % " << $4->num << endl; $$ = newNode($3, $4, "Mod"); }
-            |   '(' Greater EXP EXP ')'     { cout << "New node for greater " << $3->num << " > " << $4->num << endl; $$ = newNode($3, $4, "Greater"); }
-            |   '(' Smaller EXP EXP ')'     { cout << "New node for smaller " << $3->num << " < " << $4->num << endl; $$ = newNode($3, $4, "Smaller"); }
-            |   '(' Equal EXP EXPS ')'      { cout << "New node for equal " << $3->num << " == " << $4->num << endl; $$ = newNode($3, $4, "Equal");}
+NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << endl; $$ = newNode($3, $4, "Plus", 0); }
+            |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->num << " - " << $4->num << endl; $$ = newNode($3, $4, "Minus", 0); }
+            |   '(' Mul EXP EXPS ')'        { cout << "New node for mul " << endl; $$ = newNode($3, $4, "Mul", 0);}
+            |   '(' Div EXP EXP ')'         { cout << "New node for div " << $3->num << " / " << $4->num << endl; $$ = newNode($3, $4, "Div", 0); }
+            |   '(' Mod EXP EXP ')'         { cout << "New node for mod " << $3->num << " % " << $4->num << endl; $$ = newNode($3, $4, "Mod", 0); }
+            |   '(' Greater EXP EXP ')'     { cout << "New node for greater " << $3->num << " > " << $4->num << endl; $$ = newNode($3, $4, "Greater", 1); }
+            |   '(' Smaller EXP EXP ')'     { cout << "New node for smaller " << $3->num << " < " << $4->num << endl; $$ = newNode($3, $4, "Smaller", 1); }
+            |   '(' Equal EXP EXPS ')'      { cout << "New node for equal " << endl; $$ = newNode($3, $4, "Equal", 1); }
             ;
-LOGICAL-OP  :   '(' And EXP EXPS ')'        { }
-            |   '(' Or EXP EXPS ')'         { }
-            |   '(' Not EXP ')'             { }
+LOGICAL-OP  :   '(' And EXP EXPS ')'        { cout << "New node for and " << endl; $$ = newNode($3, $4, "And", 1); }
+            |   '(' Or EXP EXPS ')'         { cout << "New node for or " << endl; $$ = newNode($3, $4, "Or", 1); }
+            |   '(' Not EXP ')'             { cout << "New node for not " << $3->bval << endl; $$ = newNode($3, NULL, "Not", 1); }
             ;
-VARIABLE    :   id                          { $$ = newNode(NULL, NULL, "id", 0, $1); cout << "New node for id " << $1 << endl; }
+VARIABLE    :   id                          { cout << "New node for id " << $1 << endl; $$ = newNode(NULL, NULL, "id", 2, 0, $1);  }
             ;
 %%
 
@@ -99,11 +101,12 @@ void yyerror (const char *message) {
     cout << "Syntax error";
 }
 
-Node* newNode(Node *l, Node *r, string type, int num, string name, bool bval) {
+Node* newNode(Node *l, Node *r, string type, int rtype, int num, string name, bool bval) {
     Node* n = (Node *)malloc(sizeof(Node));
     n->left = l;
     n->right = r;
     n->type = type;
+    n->rtype = rtype;
     n->num = num;
     n->name = name;
     n->bval = bval;
@@ -153,6 +156,20 @@ void traverseAST(Node *node) {
         cout << "[ Traverse Node - Equal ]: " << node->bval << endl;
         num_action.clear();
     } 
+    else if(node->type == "And") {
+        traverseAST(node->left);
+        traverseAST(node->right);
+        node->bval = (node->right->type == "EXPS") ? node->left->bval && bool_op_action(node->type) : node->left->bval && node->right->bval;
+        cout << "[ Traverse Node - And ]: " << node->bval << endl;
+        bool_action.clear();
+    } 
+    else if(node->type == "Or") {
+        traverseAST(node->left);
+        traverseAST(node->right);
+        node->bval = (node->right->type == "EXPS") ? node->left->bval || bool_op_action(node->type) : node->left->bval || node->right->bval;
+        cout << "[ Traverse Node - Or ]: " << node->bval << endl;
+        bool_action.clear();
+    } 
     // ( Operator EXP EXP )
     else if(node->type == "Minus") {
         traverseAST(node->left);
@@ -197,10 +214,25 @@ void traverseAST(Node *node) {
     else if(node->type == "EXPS") {
         traverseAST(node->left);
         traverseAST(node->right);
-        cout << "[ Traverse Node - EXPS ] " << node->left->num << " | " << node->right->num << endl;
-        num_action.push_back(node->left->num);
-        num_action.push_back(node->right->num);
+        // for LOGIC
+        if (node->left->rtype == 1 && node->right->rtype == 1) {
+            cout << "[ Traverse Node - EXPS(LOGIC) ] " << node->left->bval << " | " << node->right->bval << endl;
+            bool_action.push_back(node->left->bval);
+            bool_action.push_back(node->right->bval);
+        }
+        // for NUM
+        else {
+            cout << "[ Traverse Node - EXPS(NUM) ] " << node->left->num << " | " << node->right->num << endl;
+            num_action.push_back(node->left->num);
+            num_action.push_back(node->right->num);
+        }
     } 
+    // Not
+    else if(node->type == "Not") {
+        traverseAST(node->left);
+        node->bval = !node->left->bval;
+        cout << "[ Traverse Node - Not ]: " << node->bval << endl;
+    }
 
 }
 
@@ -219,7 +251,20 @@ int num_op_action(string type){
                 return NOT_EQUAL;
         }
     }
-    cout << "OP_ACTION_INT RES: " << res << endl;
+    cout << "num_op_action RES: " << res << endl;
+    return res;
+}
+
+bool bool_op_action(string type){
+    bool res = (type == "And")? 1 : 0;
+
+    for(int i = 0 ; i < bool_action.size(); i++) {
+        if(type == "And")
+            res = (res && bool_action[i])? 1 : 0;
+        else if(type == "Or")
+            res = (res || bool_action[i])? 1 : 0;
+    }
+    cout << "bool_op_action RES: " << res << endl;
     return res;
 }
 
