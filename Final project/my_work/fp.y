@@ -130,6 +130,7 @@ void yyerror (const char *message) {
 
 Node* newNode(Node *l, Node *r, string type, int rtype, int ival, string name, bool bval) {
     Node* n = (Node *)malloc(sizeof(Node));
+
     n->left = l;
     n->right = r;
     n->type = type;
@@ -137,6 +138,7 @@ Node* newNode(Node *l, Node *r, string type, int rtype, int ival, string name, b
     n->ival = ival;
     n->name = name;
     n->bval = bval;
+    
     return n;
 }
 
@@ -152,6 +154,13 @@ void traverseAST(Node *node) {
         cout << "[ Traverse Node - Bool_val ]: " << node->bval << endl;
     } 
     else if(node->type == "id") {
+        it = var_Map.find(node->name); 
+        if(it != var_Map.end()){
+            cout << "assign value to existed variable" << endl;
+            node->rtype = it->second.rtype;
+            node->ival = it->second.ival;
+            node->bval = it->second.bval;
+        }
         cout << "[ Traverse Node - ID ]: " << node->name << endl;
     } 
     // ----------------------- ( Operator EXP EXPS ) -----------------------
@@ -255,13 +264,15 @@ void traverseAST(Node *node) {
         if (node->left->rtype == 1 && node->right->rtype == 1) {
             cout << "[ Traverse Node - EXPS(LOGIC) ] " << node->left->bval << " | " << node->right->bval << endl;
             bool_action.push_back(node->left->bval);
-            bool_action.push_back(node->right->bval);
+            if(node->right->type != "EXPS")
+                bool_action.push_back(node->right->bval);
         }
         // for NUM
         else {
             cout << "[ Traverse Node - EXPS(NUM) ] " << node->left->ival << " | " << node->right->ival << endl;
             num_action.push_back(node->left->ival);
-            num_action.push_back(node->right->ival);
+            if(node->right->type != "EXPS")
+                num_action.push_back(node->right->ival);
         }
     } 
     //  ----------------------- Not -----------------------
@@ -282,7 +293,7 @@ void traverseAST(Node *node) {
             var_Map[node->name].rtype = node->right->rtype;  
             var_Map[node->name].ival = (node->right->rtype == 0)? node->right->ival : 0;  
             var_Map[node->name].bval = (node->right->rtype == 1)? node->right->bval : 0;  
-            cout << "[ Traverse Node - DEFINE ]: " << node->name << " - has stored in map" << endl;
+            cout << "[ Traverse Node - DEFINE ]: " << node->name << " - into map" << endl;
         } else {
             cout << "You can't redefining exist variable !!" << endl;
         }
