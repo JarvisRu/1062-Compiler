@@ -29,6 +29,7 @@ bool        #t|#f
 "print-num"         {   yylval.str = yytext;        return PRINT_NUM;  }
 "print-bool"        {   yylval.str = yytext;        return PRINT_BOOL; }
 "define"            {   yylval.str = yytext;        return DEFINE;     }
+"if"                {   yylval.str = yytext;        return IF;         }
 [\(\)]              {   return yytext[0]; }
 
 {number}            {   yylval.ival = atoi(yytext); return number;  }

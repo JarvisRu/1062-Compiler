@@ -1,3 +1,2 @@
-(define x (+ 1 (+ 2 3 4) (* 4 5 6) (/ 8 3) (mod 10 3)))
-(define ab-c 12)
-(define y #t)
+(print-bool (if #f (< 1 2) (> 1 2)) )
+(print-bool (if #t (< 1 2) (> 1 2)) )

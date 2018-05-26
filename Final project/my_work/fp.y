@@ -67,15 +67,17 @@
 %token<op> Plus Minus Mul Div Mod
 %token<op> Greater Smaller Equal
 %token<op> And Or Not
-%token<str> PRINT_NUM PRINT_BOOL DEFINE
+%token<str> PRINT_NUM PRINT_BOOL DEFINE IF
 %type <node> STMTS STMT
 %type <node> EXPS EXP
 %type <node> DEF-STMT PRINT-STMT
 %type <node> VARIABLE
 %type <node> NUM-OP LOGICAL-OP
+%type <node> IF-EXP TEST-EXP THAN-ELSE-EXP
+
 
 %%
-PROGRAM     :   STMTS                       { cout << " --- Accepted ---" << endl; traverseAST($1); printAllVariable();}
+PROGRAM     :   STMTS                       { cout << "[ Accepted ]" << endl; traverseAST($1); printAllVariable();}
             ;
 STMTS       :   STMT STMTS                  { cout << "STMT STMTS -> STMTS "; $$ = newNode($1, $2, "STMTS"); }
             |   STMT                        { cout << "STMT -> STMTS | "; $$ = $1; printNodeInfo($$); }
@@ -97,6 +99,7 @@ EXP         :   bool_val                    { cout << "Node bool_val -> EXP " <<
             |   VARIABLE                    { cout << "VARIABLE -> EXP " << endl;       $$ = $1;}
             |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl;         $$ = $1;}
             |   LOGICAL-OP                  { cout << "LOGICAL-OPP -> EXP " << endl;    $$ = $1;}
+            |   IF-EXP
             ;
 NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << endl; $$ = newNode($3, $4, "Plus", 0); }
             |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->ival << " - " << $4->ival << endl; $$ = newNode($3, $4, "Minus", 0); }
@@ -111,6 +114,12 @@ LOGICAL-OP  :   '(' And EXP EXPS ')'        { cout << "New node for and " << end
             |   '(' Or EXP EXPS ')'         { cout << "New node for or " << endl; $$ = newNode($3, $4, "Or", 1); }
             |   '(' Not EXP ')'             { cout << "New node for not " << $3->bval << endl; $$ = newNode($3, NULL, "Not", 1); }
             ;
+IF-EXP      :   '(' IF TEST-EXP THAN-ELSE-EXP ')'   { cout << "New node for IF-EXP " << endl; $$ = newNode($3, $4, "IF", 0);}
+            ;
+TEST-EXP    :   EXP                         { cout << "EXP -> TEST-EXP | "; $$ = $1; printNodeInfo($$); }
+            ;
+THAN-ELSE-EXP :   EXP EXP                   { cout << "New node for THAN-ELSE EXP" << endl; $$ = newNode($1, $2, "THAN-ELSE-EXP");}
+              ;
 VARIABLE    :   id                          { cout << "New node for id " << $1 << endl; $$ = newNode(NULL, NULL, "id", 2, 0, $1);  }
             ;
 %%
@@ -249,6 +258,7 @@ void traverseAST(Node *node) {
     else if(node->type == "Not") {
         traverseAST(node->left);
         node->bval = !node->left->bval;
+        node->rtype = node->left->rtype;
         cout << "[ Traverse Node - Not ]: " << node->bval << endl;
     }
     //  ----------------------- DEFINE -----------------------
@@ -257,6 +267,7 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         traverseAST(node->right);
         node->name = node->left->name;
+        node->rtype = node->right->rtype;
         if(allow2Define(node->name)){
             var_Map[node->name].rtype = node->right->rtype;  
             var_Map[node->name].ival = (node->right->rtype == 0)? node->right->ival : 0;  
@@ -266,6 +277,36 @@ void traverseAST(Node *node) {
             cout << "You can't redefining exist variable !!" << endl;
         }
     }
+    //  ----------------------- IF-EXP -----------------------
+    else if(node->type == "IF") {
+        traverseAST(node->left);
+
+        // if TEST-EXP = TRUE -> do THAN-EXP(left child of THAN-ELSE-EXP node)
+        if(node->left->bval){
+            traverseAST(node->right->left);
+            if(node->right->left->rtype == 0){
+                node->ival = node->right->left->ival; 
+                node->rtype = 0;
+            }
+            else if(node->right->left->rtype == 1){
+                node->bval = node->right->left->bval; 
+                node->rtype = 1;
+            }
+        }
+        // if TEST-EXP = FALSE -> do ELSE-EXP(right child of THAN-ELSE-EXP node)
+        else{
+            traverseAST(node->right->right);
+            if(node->right->right->rtype == 0){
+                node->ival = node->right->right->ival; 
+                node->rtype = 0;
+            }
+            else if(node->right->right->rtype == 1){
+                node->bval = node->right->right->bval; 
+                node->rtype = 1;
+            }
+        }
+        cout << "[ Traverse Node - IF-EXP ]: Test is " << node->left->bval << endl;
+    }
     //  ----------------------- STMTS -----------------------
     else if(node->type == "STMTS") {
         traverseAST(node->left);
@@ -274,6 +315,8 @@ void traverseAST(Node *node) {
     
 
 }
+
+// ---------------- Support function ----------------------
 
 int num_op_action(string type){
     int res = (type == "Mul")? 1 : 0;
@@ -307,8 +350,6 @@ bool bool_op_action(string type){
     return res;
 }
 
-
-
 bool allow2Define(string name) {
     it = var_Map.find(name);
 
@@ -324,18 +365,20 @@ void printNodeInfo(Node *node) {
     if(node->type == "bool_val") {
         cout << "Type: bool |" << node->bval << endl;
     } else if (node->type == "number") {
-        cout << "Type: number |" << node->ival << endl;
+        cout << "Type: number | " << node->ival << endl;
     } else {
         cout << "Type: " << node->type << endl;
     }
 }
 
 void printAllVariable(){
-    cout << "--------Variables-------" << endl;
-    string rtype;
-    for(it = var_Map.begin() ; it != var_Map.end() ; ++it) {
-        rtype = (it->second.rtype == 0)? "ival" : "bval";
-        cout << it->first << " = " << rtype << ", " << it->second.ival << ", " << it->second.bval << endl;
+    if (!var_Map.empty()) {
+        cout << "[ Variables ]" << endl;
+        string rtype;
+        for(it = var_Map.begin() ; it != var_Map.end() ; ++it) {
+            rtype = (it->second.rtype == 0)? "ival" : "bval";
+            cout << it->first << " = " << rtype << ", " << it->second.ival << ", " << it->second.bval << endl;
+        }
     }
 }
 
