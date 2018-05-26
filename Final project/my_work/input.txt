@@ -1,2 +1,1 @@
-(print-bool (if #f (< 1 2) (> 1 2)) )
-(print-bool (if #t (< 1 2) (> 1 2)) )
+(* 1 2 3 4)

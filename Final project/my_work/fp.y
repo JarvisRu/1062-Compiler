@@ -96,10 +96,10 @@ EXPS        :   EXP EXPS                    {  cout << "EXP EXPS -> EXPS" << end
             ;
 EXP         :   bool_val                    { cout << "Node bool_val -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "bool_val", 1, 0, " ", $1); }
             |   number                      { cout << "Node number -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "number", 0, $1); }
-            |   VARIABLE                    { cout << "VARIABLE -> EXP " << endl;       $$ = $1;}
-            |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl;         $$ = $1;}
-            |   LOGICAL-OP                  { cout << "LOGICAL-OPP -> EXP " << endl;    $$ = $1;}
-            |   IF-EXP
+            |   VARIABLE                    { cout << "VARIABLE -> EXP " << endl;       $$ = $1; }
+            |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl;         $$ = $1; }
+            |   LOGICAL-OP                  { cout << "LOGICAL-OPP -> EXP " << endl;    $$ = $1; }
+            |   IF-EXP                      { cout << "IF-EXP -> EXP " << endl;         $$ = $1; }
             ;
 NUM-OP      :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << endl; $$ = newNode($3, $4, "Plus", 0); }
             |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->ival << " - " << $4->ival << endl; $$ = newNode($3, $4, "Minus", 0); }
@@ -228,14 +228,24 @@ void traverseAST(Node *node) {
         node->bval = (node->left->ival < node->right->ival)? 1 : 0;
         cout << "[ Traverse Node - Smaller ]: " << node->bval << endl;
     }
-    // PRINT
+    // ----------------------- PRINT -----------------------
     else if(node->type == "PRINT_NUM") {
         traverseAST(node->left);
-        cout << "[ Traverse Node - PRINT_NUM RESULT ]: " << node->left->ival << endl;
+        int res;
+        if(node->left->type == "id") 
+            res = var_Map[node->left->name].ival;
+        else 
+            res = node->left->ival;
+        cout << "[ Traverse Node - PRINT_NUM RESULT ]: " << res << endl;
     }
     else if(node->type == "PRINT_BOOL") {
         traverseAST(node->left);
-        cout << "[ Traverse Node - PRINT_BOOL RESULT ]: " << node->left->bval << endl;
+        string res;
+        if(node->left->type == "id") 
+            res = (var_Map[node->left->name].bval)? "#t" : "#f";
+        else 
+            res = (node->left->bval)? "#t" : "#f";
+        cout << "[ Traverse Node - PRINT_BOOL RESULT ]: " << res << endl;
     }
     //  ----------------------- EXPS -----------------------
     else if(node->type == "EXPS") {
