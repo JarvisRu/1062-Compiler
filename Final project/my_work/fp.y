@@ -156,12 +156,12 @@ FUN-CALL        :   '(' FUN-EXP ARGUMENTS ')'   {  cout << "New node for FUN-CAL
                 ;
 
 ARGUMENTS       :   EXP ARGUMENTS               { cout << "New node for ARGUMENTS " << endl; $$ = newNode($1, $2, "ARGUMENTS", 4);}
-                |   EXP                         { $$ = $1; }
-                |                               { cout << "inA" << endl; }
+                |   EXP                         { $$ = newNode($1, NULL, "ARGUMENTS", 4); }
+                |                               
                 ;
 PARAMETERS      :   VARIABLE PARAMETERS         { cout << "New node for PARAMETERS " << endl; $$ = newNode($1, $2, "PARAMETERS", 4);}
-                |   VARIABLE                    { $$ = $1; }
-                |                               { cout << "inP" << endl; }
+                |   VARIABLE                    { $$ = newNode($1, NULL, "PARAMETERS", 4); }
+                |                               
                 ;
 VARIABLE        :   id                          { cout << "New node for id " << $1 << endl; $$ = newNode(NULL, NULL, "id", 2, 0, $1);  }
                 ;
@@ -409,20 +409,23 @@ void traverseAST(Node *node) {
         node->ival = node->left->ival;
         node->bval = node->left->bval;
         cout << "[ Traverse Node - FUN-CALL] " << endl;
+        par_Map["noName"].clear();
+        args.clear();
     }
     else if(node->type == "PARAMETERS") {
         traverseAST(node->left);
         traverseAST(node->right);
         cout << "[ Traverse Node - PARAMETERS] " << endl;
-        if(node->right->type != "PARAMETERS")
+        if(node->right != NULL && node->right->type != "PARAMETERS")
             par_Map["noName"][node->right->name] = newVar(0, 0, 0);
-        par_Map["noName"][node->left->name] = newVar(0, 0, 0);
+        if(node->left != NULL && node->left->type != "PARAMETERS")
+            par_Map["noName"][node->left->name] = newVar(0, 0, 0);
     } 
     else if(node->type == "ARGUMENTS") {
         traverseAST(node->left);
         traverseAST(node->right);
         cout << "[ Traverse Node - ARGUMENTS] " << endl;
-        if(node->right != NULL) {
+        if(node->right != NULL && node->right->type != "ARGUMENTS") {
             if(node->right->rtype == 0) {
                 args.push_back(newVar(0, node->right->ival, 0));
                 cout << "Push one var as arg - " << node->right->ival << endl;
@@ -431,7 +434,7 @@ void traverseAST(Node *node) {
                 cout << "Push one var as arg - " << node->right->bval << endl;
             } 
         }
-        if(node->left != NULL) {
+        if(node->left != NULL && node->left->type != "ARGUMENTS") {
             if(node->left->rtype == 0) {
                 args.push_back(newVar(0, node->left->ival, 0));
                 cout << "Push one var as arg - " << node->left->ival << endl;
