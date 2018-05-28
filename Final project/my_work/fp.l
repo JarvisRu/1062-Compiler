@@ -1,5 +1,6 @@
 %option noyywrap
 %{
+    #include "main.h"       // must include header file before .tab.h
     #include "fp.tab.h"
 %}
 

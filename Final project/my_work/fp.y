@@ -1,70 +1,25 @@
-%code requires {
-    #include <iostream>  
-    #include <string>  
-    #include <cstdlib>
-    using namespace std;
-    #define NOT_EQUAL -12321
-
-    extern "C"
-    {   
-        int yylex(void);
-        void yyerror(const char *s);  
-    }  
-
-    // Tree Node
-    typedef struct treeNode{
-        struct treeNode *left, *right;
-        string type;
-        int rtype;     // return type, 0 as NUM, 1 as LOGIC, 2 as ID, 3 as FUN, 4 as Pars or Args
-        int ival;
-        string name;
-        bool bval;
-    } Node; 
-
-    Node* newNode(Node*, Node*, string, int = 2, int = 0, string = " ", bool = false);
-    void traverseAST(Node*);
-
-    int num_op_action(string);      // return result in EXPS for operator : Plus Mul Equal
-    bool bool_op_action(string);    // return result in EXPS for operator : And Or Not
-
-    bool allow2Define(string);      // to check if this variable is defined already
-
-    void bindArgs2Pars(string);     // bind arguments to parameters for function 
-    
-    // for debug
-    void printNodeInfo(Node*);      
-    void printAllVariable();
-    void printAllFunPars();
-    void printAllFunArgs();
-}
 
 %{
     #include <vector>
     #include <string>
     #include <map>
+    #include "main.h"
     using namespace std;
-
-    typedef struct{
-        int rtype;
-        int ival;
-        bool bval;
-    } Var;
-
-    typedef Var* Var_ptr;
-
-    Var* newVar(int, int, bool);
 
     vector<int> num_action;         // store for EXPS : Plus Mul Equal
     vector<bool> bool_action;       // store for EXPS : And Or Not
 
-    map<string,Var> var_Map;                        // store variables for normal
+    map<string,Var> varTable;                        // store variables for normal
     map<string,Var>::iterator it;  
 
     string funMode = "none";
-    map<string, map<string, Var_ptr> > par_Map;         // store parameters for function < FUN-NAME , variables name >
-    vector<Var_ptr> args;                               // store args for function
+    map<string, map<string, Var_ptr> > parTable;         // store parameters for function < FUN-NAME , variables name >
+    vector<Var_ptr> args;                                // store args for function
+    map<string, Node_ptr> funTable;                      // register function, store FUN-EXP node ptr 
     map<string, map<string, Var_ptr> >::iterator it2;  
-    map<string, Var_ptr>::iterator it3;   
+    map<string, Var_ptr>::iterator it3;  
+    map<string, Node_ptr>::iterator it4;  
+
 
 %}
 
@@ -152,16 +107,17 @@ FUN_IDs         :   '(' PARAMETERS ')'                  { cout << "FUN_IDs compl
                 ;
 FUN-BODY        :   EXP                                 {  cout << "EXP -> FUN-BODY | "; $$ = $1; printNodeInfo($$); }
                 ;
-FUN-CALL        :   '(' FUN-EXP ARGUMENTS ')'   {  cout << "New node for FUN-CALL " << endl; $$ = newNode($2, $3, "FUN-CALL", 3); }
+FUN-CALL        :   '(' FUN-EXP ARGUMENTS ')'   { cout << "New node for no-named FUN-CALL " << endl;    $$ = newNode($2, $3, "FUN-CALL", 3); }
+                |   '(' VARIABLE ARGUMENTS ')' { cout << "New node for named FUN-CALL " << endl;        $$ = newNode($2, $3, "NAMED-FUN-CALL", 3);}
                 ;
 
 ARGUMENTS       :   EXP ARGUMENTS               { cout << "New node for ARGUMENTS " << endl; $$ = newNode($1, $2, "ARGUMENTS", 4);}
                 |   EXP                         { $$ = newNode($1, NULL, "ARGUMENTS", 4); }
-                |                               
+                |                               {  }
                 ;
 PARAMETERS      :   VARIABLE PARAMETERS         { cout << "New node for PARAMETERS " << endl; $$ = newNode($1, $2, "PARAMETERS", 4);}
                 |   VARIABLE                    { $$ = newNode($1, NULL, "PARAMETERS", 4); }
-                |                               
+                |                               {  }
                 ;
 VARIABLE        :   id                          { cout << "New node for id " << $1 << endl; $$ = newNode(NULL, NULL, "id", 2, 0, $1);  }
                 ;
@@ -207,16 +163,18 @@ void traverseAST(Node *node) {
     } 
     else if(node->type == "id") {
         if(funMode == "none") {
-            it = var_Map.find(node->name); 
-            if(it != var_Map.end()){
+            it = varTable.find(node->name); 
+            if(it != varTable.end()){
                 cout << "assign value from existed variable" << endl;
                 node->rtype = it->second.rtype;
                 node->ival = it->second.ival;
                 node->bval = it->second.bval;
             }
         } else {
-            it3 = par_Map[funMode].find(node->name);
-            if(it3 != par_Map[funMode].end()){
+            if(funMode != "noNameFun")                  // if is no-named func, traverse FUN first
+                traverseAST(funTable[node->name]);
+            it3 = parTable[funMode].find(node->name);
+            if(it3 != parTable[funMode].end()){
                 cout << "assign value from parameters - " << funMode << endl;
                 node->rtype = it3->second->rtype;
                 node->ival = it3->second->ival;
@@ -304,7 +262,7 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         int res;
         if(node->left->type == "id") 
-            res = var_Map[node->left->name].ival;
+            res = varTable[node->left->name].ival;
         else 
             res = node->left->ival;
         cout << "[ Traverse Node - PRINT_NUM RESULT ]: " << res << endl;
@@ -313,7 +271,7 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         string res;
         if(node->left->type == "id") 
-            res = (var_Map[node->left->name].bval)? "#t" : "#f";
+            res = (varTable[node->left->name].bval)? "#t" : "#f";
         else 
             res = (node->left->bval)? "#t" : "#f";
         cout << "[ Traverse Node - PRINT_BOOL RESULT ]: " << res << endl;
@@ -346,18 +304,31 @@ void traverseAST(Node *node) {
     }
     //  ----------------------- DEFINE -----------------------
     else if(node->type == "DEFINE") {
-        // for variable
         traverseAST(node->left);
-        traverseAST(node->right);
-        node->name = node->left->name;
-        node->rtype = node->right->rtype;
-        if(allow2Define(node->name)){
-            var_Map[node->name].rtype = node->right->rtype;  
-            var_Map[node->name].ival = (node->right->rtype == 0)? node->right->ival : 0;  
-            var_Map[node->name].bval = (node->right->rtype == 1)? node->right->bval : 0;  
-            cout << "[ Traverse Node - DEFINE ]: " << node->name << " - into map" << endl;
-        } else {
-            cout << "You can't redefining exist variable !!" << endl;
+        // define a variable : store ival or bval 
+        if(node->right->rtype == 0 || node->right->rtype == 1) {
+            traverseAST(node->right);
+            node->name = node->left->name;
+            node->rtype = node->right->rtype;
+            if(allow2Define(node->name, 1)){
+                varTable[node->name].rtype = node->right->rtype;  
+                varTable[node->name].ival = (node->right->rtype == 0)? node->right->ival : 0;  
+                varTable[node->name].bval = (node->right->rtype == 1)? node->right->bval : 0;  
+                cout << "[ Traverse Node - DEFINE variable name]: " << node->name << " - into map" << endl;
+            } else {
+                cout << "You can't redefining exist variable !!" << endl;
+            }
+        }
+        // define a function name : store function ptr in funTable 
+        else if(node->right->rtype == 3){
+            node->name = node->left->name;
+            node->rtype = node->right->rtype;
+            if(allow2Define(node->name, 2)){
+                funTable[node->name] = node->right;  
+                cout << "[ Traverse Node - DEFINE - function name]: " << node->name << " - into map" << endl;
+            } else {
+                cout << "You can't redefining exist function name !!" << endl;
+            }
         }
     }
     //  ----------------------- IF-EXP -----------------------
@@ -392,10 +363,9 @@ void traverseAST(Node *node) {
     }
     //  ----------------------- FUN -----------------------
     else if(node->type == "FUN") { 
-        traverseAST(node->left);
-        bindArgs2Pars("noName");
-        funMode = "noName";             // node(id) will find value in parameter
-        traverseAST(node->right);
+        traverseAST(node->left);                // traverse parameters first, create parTable for <funMode>
+        bindArgs2Pars(funMode);                 // node(id) will find value in parameter
+        traverseAST(node->right);               // traverse FUN-EXP with arguments
         funMode = "none";  
         node->rtype = node->right->rtype;
         node->ival = node->right->ival;
@@ -403,23 +373,35 @@ void traverseAST(Node *node) {
         cout << "[ Traverse Node - FUN] " << endl;
     }
     else if(node->type == "FUN-CALL") { 
-        traverseAST(node->right);
-        traverseAST(node->left);
+        traverseAST(node->right);               // trace arguments first
+        funMode = "noNameFun";
+        traverseAST(node->left);                // then trace FUN
         node->rtype = node->left->rtype;
         node->ival = node->left->ival;
         node->bval = node->left->bval;
         cout << "[ Traverse Node - FUN-CALL] " << endl;
-        par_Map["noName"].clear();
+        parTable["noNameFun"].clear();
+        args.clear();
+    }
+    else if(node->type == "NAMED-FUN-CALL") { 
+        traverseAST(node->right);               // trace arguments first
+        funMode = node->left->name;
+        traverseAST(node->left);                // then trace variable(FUN-NAME) -> trace FUN
+        node->rtype = node->left->rtype;
+        node->ival = node->left->ival;
+        node->bval = node->left->bval;
+        cout << "[ Traverse Node - NAMED-FUN-CALL]" << endl;
+        parTable[node->left->name].clear();
         args.clear();
     }
     else if(node->type == "PARAMETERS") {
         traverseAST(node->left);
         traverseAST(node->right);
-        cout << "[ Traverse Node - PARAMETERS] " << endl;
+        cout << "[ Traverse Node - PARAMETERS] - " << funMode << endl;
         if(node->right != NULL && node->right->type != "PARAMETERS")
-            par_Map["noName"][node->right->name] = newVar(0, 0, 0);
+            parTable[funMode][node->right->name] = newVar(0, 0, 0);
         if(node->left != NULL && node->left->type != "PARAMETERS")
-            par_Map["noName"][node->left->name] = newVar(0, 0, 0);
+            parTable[funMode][node->left->name] = newVar(0, 0, 0);
     } 
     else if(node->type == "ARGUMENTS") {
         traverseAST(node->left);
@@ -488,17 +470,21 @@ bool bool_op_action(string type){
     return res;
 }
 
-bool allow2Define(string name) {
-    it = var_Map.find(name);
-
-    if(it == var_Map.end())
-        return true;
-    else 
-        return false;
+bool allow2Define(string name, int mode) {
+    if(mode == 1) {
+        it = varTable.find(name);
+        if(it == varTable.end())
+            return true;
+    } else {
+        it4 = funTable.find(name);
+        if(it4 == funTable.end())
+            return true;
+    }
+    return false;
 }
 
 void bindArgs2Pars(string funName) {
-    it3 = par_Map[funName].begin();
+    it3 = parTable[funName].begin();
     for(int i = args.size() - 1 ; i >= 0 ; i--, it3++) {
         it3->second = args[i];
         cout << "[ Bind ]" << it3->first << endl;
@@ -518,10 +504,10 @@ void printNodeInfo(Node *node) {
 }
 
 void printAllVariable(){
-    if (!var_Map.empty()) {
+    if (!varTable.empty()) {
         cout << "[ Variables ]" << endl;
         string rtype;
-        for(it = var_Map.begin() ; it != var_Map.end() ; ++it) {
+        for(it = varTable.begin() ; it != varTable.end() ; ++it) {
             rtype = (it->second.rtype == 0)? "ival" : "bval";
             cout << it->first << " = " << rtype << ", " << it->second.ival << ", " << it->second.bval << endl;
         }
@@ -529,9 +515,9 @@ void printAllVariable(){
 }
 
 void printAllFunPars(){
-    if (!par_Map.empty()) {
+    if (!parTable.empty()) {
         cout << "[ Parameters ]" << endl;
-        for(it2 = par_Map.begin() ; it2 != par_Map.end() ; ++it2) {
+        for(it2 = parTable.begin() ; it2 != parTable.end() ; ++it2) {
             cout << "Fun - " << it2->first << endl;
             for(it3 = it2->second.begin() ; it3 != it2->second.end() ; ++it3) {
                 cout << it3->first << " = " << it3->second->ival << ", " ;
