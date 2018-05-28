@@ -20,9 +20,7 @@
     map<string, Var_ptr>::iterator it3;  
     map<string, Node_ptr>::iterator it4;  
 
-
 %}
-
 
 %union {
     int ival;
@@ -124,7 +122,7 @@ VARIABLE        :   id                          { cout << "New node for id " << 
 %%
 
 void yyerror (const char *message) {
-    cout << "Syntax error";
+    cout << message;
 }
 
 // ---------------- New  ----------------------
@@ -495,6 +493,16 @@ void bindArgs2Pars(string funName) {
     }
 }
 
+// bool typeChecking(Node *left, Node *right, bool is_number) {
+//     if(is_number) {
+//         if(left->rtype != 0) {
+
+//         }
+//     } else {
+
+//     }
+// }
+
 // ----------------For Debugging----------------------
 
 void printNodeInfo(Node *node) {
@@ -549,12 +557,12 @@ int main(int argc, char *argv[]) {
     yyparse();
     
     // debugging
-    cout << "========================" << endl;
+    cout << endl << "========================" << endl;
     printAllVariable();
-    cout << "========================" << endl;
-    printAllFunPars();
-    cout << "========================" << endl;
-    printAllFunArgs();
+    // cout << "========================" << endl;
+    // printAllFunPars();
+    // cout << "========================" << endl;
+    // printAllFunArgs();
 
     return(0);
 }
