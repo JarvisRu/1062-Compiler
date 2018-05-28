@@ -15,7 +15,7 @@
     string funMode = "none";
     map<string, map<string, Var_ptr> > parTable;         // store parameters for function < FUN-NAME , variables name >
     vector<Var_ptr> args;                                // store args for function
-    map<string, Node_ptr> funTable;                      // register function, store FUN-EXP node ptr 
+    map<string, Node_ptr> funTable;                      // register named-function, store FUN-EXP node ptr 
     map<string, map<string, Var_ptr> >::iterator it2;  
     map<string, Var_ptr>::iterator it3;  
     map<string, Node_ptr>::iterator it4;  
@@ -117,7 +117,7 @@ ARGUMENTS       :   EXP ARGUMENTS               { cout << "New node for ARGUMENT
                 ;
 PARAMETERS      :   VARIABLE PARAMETERS         { cout << "New node for PARAMETERS " << endl; $$ = newNode($1, $2, "PARAMETERS", 4);}
                 |   VARIABLE                    { $$ = newNode($1, NULL, "PARAMETERS", 4); }
-                |                               {  }
+                |                               { $$ = newNode(NULL, NULL, "PARAMETERS", 4); }
                 ;
 VARIABLE        :   id                          { cout << "New node for id " << $1 << endl; $$ = newNode(NULL, NULL, "id", 2, 0, $1);  }
                 ;
@@ -306,7 +306,7 @@ void traverseAST(Node *node) {
     else if(node->type == "DEFINE") {
         traverseAST(node->left);
         // define a variable : store ival or bval 
-        if(node->right->rtype == 0 || node->right->rtype == 1) {
+        if(node->right->rtype == 0 || node->right->rtype == 1 || (node->right->rtype == 3 && node->right->left->left == NULL)) {
             traverseAST(node->right);
             node->name = node->left->name;
             node->rtype = node->right->rtype;
@@ -365,8 +365,7 @@ void traverseAST(Node *node) {
     else if(node->type == "FUN") { 
         traverseAST(node->left);                // traverse parameters first, create parTable for <funMode>
         bindArgs2Pars(funMode);                 // node(id) will find value in parameter
-        traverseAST(node->right);               // traverse FUN-EXP with arguments
-        funMode = "none";  
+        traverseAST(node->right);               // traverse FUN-EXP with arguments 
         node->rtype = node->right->rtype;
         node->ival = node->right->ival;
         node->bval = node->right->bval;
@@ -380,19 +379,24 @@ void traverseAST(Node *node) {
         node->ival = node->left->ival;
         node->bval = node->left->bval;
         cout << "[ Traverse Node - FUN-CALL] " << endl;
+        // reset
         parTable["noNameFun"].clear();
         args.clear();
+        funMode = "none"; 
     }
     else if(node->type == "NAMED-FUN-CALL") { 
         traverseAST(node->right);               // trace arguments first
         funMode = node->left->name;
         traverseAST(node->left);                // then trace variable(FUN-NAME) -> trace FUN
-        node->rtype = node->left->rtype;
-        node->ival = node->left->ival;
-        node->bval = node->left->bval;
+        // get fun result
+        node->rtype = funTable[funMode]->rtype;
+        node->ival  = funTable[funMode]->ival;
+        node->bval  = funTable[funMode]->bval;
         cout << "[ Traverse Node - NAMED-FUN-CALL]" << endl;
+        // reset
         parTable[node->left->name].clear();
         args.clear();
+        funMode = "none"; 
     }
     else if(node->type == "PARAMETERS") {
         traverseAST(node->left);

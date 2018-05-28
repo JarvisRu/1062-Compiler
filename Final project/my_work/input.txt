@@ -1,5 +1,5 @@
+(define bar (fun (x) (+ x 1)))
 
-(define foo
-  (fun (a b c) (+ a b (* b c))))
+(define bar-z (fun () 2))
 
-(print-num (foo 10 9 8))
+(print-num (bar bar-z))
