@@ -111,7 +111,7 @@ FUN-CALL        :   '(' FUN-EXP ARGUMENTS ')'   { cout << "New node for no-named
 
 ARGUMENTS       :   EXP ARGUMENTS               { cout << "New node for ARGUMENTS " << endl; $$ = newNode($1, $2, "ARGUMENTS", 4);}
                 |   EXP                         { $$ = newNode($1, NULL, "ARGUMENTS", 4); }
-                |                               {  }
+                |                               { $$ = newNode(NULL, NULL, "ARGUMENTS", 4); }
                 ;
 PARAMETERS      :   VARIABLE PARAMETERS         { cout << "New node for PARAMETERS " << endl; $$ = newNode($1, $2, "PARAMETERS", 4);}
                 |   VARIABLE                    { $$ = newNode($1, NULL, "PARAMETERS", 4); }
@@ -304,7 +304,7 @@ void traverseAST(Node *node) {
     else if(node->type == "DEFINE") {
         traverseAST(node->left);
         // define a variable : store ival or bval 
-        if(node->right->rtype == 0 || node->right->rtype == 1 || (node->right->rtype == 3 && node->right->left->left == NULL)) {
+        if(node->right->rtype == 0 || node->right->rtype == 1) {
             traverseAST(node->right);
             node->name = node->left->name;
             node->rtype = node->right->rtype;
@@ -319,6 +319,7 @@ void traverseAST(Node *node) {
         }
         // define a function name : store function ptr in funTable 
         else if(node->right->rtype == 3){
+            
             node->name = node->left->name;
             node->rtype = node->right->rtype;
             if(allow2Define(node->name, 2)){
@@ -494,13 +495,7 @@ void bindArgs2Pars(string funName) {
 }
 
 // bool typeChecking(Node *left, Node *right, bool is_number) {
-//     if(is_number) {
-//         if(left->rtype != 0) {
 
-//         }
-//     } else {
-
-//     }
 // }
 
 // ----------------For Debugging----------------------
