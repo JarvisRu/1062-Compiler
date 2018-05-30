@@ -1,16 +1,6 @@
 %{
-#include<iostream>  
-#include<string>  
-#include<sstream>  
-#include<stdio.h>
-#include<map>
+#include "main.h"
 using namespace std;
-
-extern "C"
-{   
-    int yylex(void);
-    void yyerror(const char *s);  
-}  
 
 map<string,int> lhsMap;
 map<string,int> rhsMap;
@@ -20,11 +10,6 @@ map<string,int> resultMap;
 map<string,int>::iterator it, it2;
 bool inLHS = true;
 int innerLevel = 0;
-
-void updateForElement(string, bool);
-void updateForInner(int);
-void updateForCompound(int);
-void printResult();
 %}
 
 %union {

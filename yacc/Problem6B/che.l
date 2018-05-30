@@ -1,5 +1,6 @@
 %option noyywrap
 %{
+    #include "main.h"
     #include "che.tab.h"
     extern "C" 
     {   
