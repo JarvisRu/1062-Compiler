@@ -1,92 +1,41 @@
-/* 
-    Template for BossAttack3_2018 
-    
-    @struct : Node Var Matrix Operator
-    @grammar : matrix calculator 
-    @author JarvisRu
-*/
-
 
 %{
     #include "main.h"
     using namespace std;
-
-    // declare global variable
-    bool error = false;
-    // ....
-
 %}
 
-
 %union {
-    int ival;
-    // Matrix *mat;
-    // char* ele;
-    // Operator op;
+    float fval;
+    char op;
+    char *str;
 }
-%token<ival> NUMBER
+%token<fval> NUMBER
 %token<op> PLUS
 %token<op> SUB
-%token<op> MUL
-%type <mat> mat
-%type <mat> expr
-%type <mat> exp
+%token<op> POWER
+%token<str> FRAC
+%type <fval> num
+%type <fval> expr
+%type <fval> exp
 
 %%
-final   :   expr                            { printResult();}              
-expr    :   expr PLUS exp                   { $$ = calculate($1, $3, $2); }  
-        |   expr SUB exp                    { $$ = calculate($1, $3, $2); }  
-        |   exp                             {  }
+final   :   expr                            { printf("%.3lf", $1); }              
+expr    :   expr PLUS exp                   { $$ = $1 + $3; }  
+        |   expr SUB exp                    { $$ = $1 - $3; }  
+        |   exp                             
         ;
-exp     :   exp MUL mat                     { $$ = calculate($1, $3, $2); }
-        |   mat                             { }
+exp     :   exp POWER num                   { $$ = pow($1, $3); }
+        |   exp POWER '{' expr '}'          { $$ = pow($1, $4); }
+        |   num                             
         ;
-mat     :   '(' expr ')'                    { $$ = $2;  }
-        |   '[' NUMBER ',' NUMBER ']'       { $$ = newMatrix($2,$4); }
+num     :   FRAC '{' expr '}' '{' expr '}'  {  $$ = $3/$6;  }
+        |   NUMBER                          {  $$ = $1;     }
         ;
 %%
 
 void yyerror (const char *message) {
     cout << "Invalid format";
 }
-// ---------------- New  ----------------------
-Node* newNode(Node *l, Node *r, string type, int rtype, int ival, string name, bool bval) {
-    Node* n = (Node *)malloc(sizeof(Node));
-    n->left = l;
-    n->right = r;
-    n->type = type;
-    n->rtype = rtype;
-    n->ival = ival;
-    n->name = name;
-    n->bval = bval;
-    return n;
-}
-
-Var* newVar(int rtype, int ival, bool bval) {
-    Var* v = (Var *)malloc(sizeof(Var));
-    v->rtype = rtype;
-    v->ival = ival;
-    v->bval = bval;
-    return v;
-}
-
-Matrix* newMatrix(int lval, int rval){
-    Matrix* m = (Matrix *)malloc(sizeof(Matrix));
-    m->left_value = lval;
-    m->right_value = rval;
-    return m;
-}
-// ----------------- Support Function ---------------------
-
-
-// -------------------------------------------
-void printResult() {
-    if(error)
-        cout << "error message ";
-    else
-        cout << "Accepted";
-}
-// -------------------------------------------
 
 int main(int argc, char *argv[]) {
     yyparse();

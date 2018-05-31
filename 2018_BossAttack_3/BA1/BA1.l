@@ -9,25 +9,21 @@
 %}
 
 number  ([1-9]+[0-9]+|[1-9])
-digit   [0-9]
-digits  [1-9]{digit}*
-letter  [a-z]
 
 eol     \n
 space   [\t\r ]
 
 %%
-{number}            {   yylval.ival = atoi(yytext); return NUMBER; }
-[\[\],\(\)]         {   return yytext[0];  }
-{space}             {   }
-"+"                 {   yylval.op.type = yytext; yylval.op.pos = pos; return PLUS; }
-"-"                 {   yylval.op.type = yytext; yylval.op.pos = pos; return SUB; }
-"*"                 {   yylval.op.type = yytext; yylval.op.pos = pos; return MUL; }
-"^T"                {   yylval.op.type = yytext; yylval.op.pos = pos; return TRANS; }
+{number}            {   yylval.fval = atoi(yytext); return NUMBER; }
+[\{\}]              {   return yytext[0];  }
+"+"                 {   yylval.op = yytext[0];  return PLUS; }
+"-"                 {   yylval.op = yytext[0];  return SUB; }
+"^"                 {   yylval.op = yytext[0];  return POWER; }
+"\\frac"            {   yylval.str = yytext;    return FRAC;}
+{space}             { }
 .                   { }
 
-
 {eol}               { return(0); }
-<<EOF>>             { return 0; }
+
 
 %%
