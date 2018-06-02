@@ -15,7 +15,7 @@
     string funMode = "none";
     map<string, map<string, Var_ptr> > parTable;         // store parameters for function < FUN-NAME , variables name >
     vector<Var_ptr> args;                                // store args for function
-    map<string, Node_ptr> funTable;                      // register named-function, store FUN-EXP node ptr 
+    map<string, Node_ptr> funTable;                      // register named-function, store FUN_EXP node ptr 
     map<string, map<string, Var_ptr> >::iterator it2;  
     map<string, Var_ptr>::iterator it3;  
     map<string, Node_ptr>::iterator it4;  
@@ -38,12 +38,12 @@
 %token<str> PRINT_NUM PRINT_BOOL DEFINE IF FUN
 %type <node> STMTS STMT
 %type <node> EXPS EXP
-%type <node> DEF-STMT PRINT-STMT
+%type <node> DEF_STMT PRINT_STMT
 %type <node> VARIABLE 
-%type <node> NUM-OP LOGICAL-OP
-%type <node> IF-EXP TEST-EXP THAN-ELSE-EXP
-%type <node> FUN-EXP FUN-CALL 
-%type <node> FUN_IDs FUN-BODY 
+%type <node> NUM_OP LOGICAL_OP
+%type <node> IF_EXP TEST_EXP THAN_ELSE_EXP
+%type <node> FUN_EXP FUN_CALL 
+%type <node> FUN_IDs FUN_BODY 
 %type <node> PARAMETERS ARGUMENTS
 
 
@@ -55,13 +55,13 @@ STMTS           :   STMT STMTS                  { cout << "STMT STMTS -> STMTS "
                 |   STMT                        { cout << "STMT -> STMTS | "; $$ = $1; printNodeInfo($$); }
                 ;
 STMT            :   EXP                         { cout << "EXP -> STMT | ";  $$ = $1; printNodeInfo($$); }
-                |   DEF-STMT                    { cout << "D-STMT -> STMT | "; $$ = $1; printNodeInfo($$); }
-                |   PRINT-STMT                  { cout << "P-STMT -> STMT | "; $$ = $1; printNodeInfo($$); }
+                |   DEF_STMT                    { cout << "D-STMT -> STMT | "; $$ = $1; printNodeInfo($$); }
+                |   PRINT_STMT                  { cout << "P-STMT -> STMT | "; $$ = $1; printNodeInfo($$); }
                 ;
 
-DEF-STMT        :   '(' DEFINE VARIABLE EXP ')' { cout << "New node for DEFINE | V_Name " << $3->name << endl;    $$ = newNode($3, $4, "DEFINE");  }
+DEF_STMT        :   '(' DEFINE VARIABLE EXP ')' { cout << "New node for DEFINE | V_Name " << $3->name << endl;    $$ = newNode($3, $4, "DEFINE");  }
                 ;
-PRINT-STMT      :   '(' PRINT_NUM EXP ')'       { cout << "New node for PRINT_NUM" << endl;     $$ = newNode($3, NULL, "PRINT_NUM"); }
+PRINT_STMT      :   '(' PRINT_NUM EXP ')'       { cout << "New node for PRINT_NUM" << endl;     $$ = newNode($3, NULL, "PRINT_NUM"); }
                 |   '(' PRINT_BOOL EXP ')'      { cout << "New node for PRINT_BOOL" << endl;    $$ = newNode($3, NULL, "PRINT_BOOL");}
                 ;
 
@@ -71,14 +71,14 @@ EXPS            :   EXP EXPS                    {  cout << "EXP EXPS -> EXPS" <<
 EXP             :   bool_val                    { cout << "Node bool_val -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "bool_val", 1, 0, " ", $1); }
                 |   number                      { cout << "Node number -> EXP " << $1 << endl; $$ = newNode(NULL, NULL, "number", 0, $1); }
                 |   VARIABLE                    { cout << "VARIABLE -> EXP " << endl;       $$ = $1; }
-                |   NUM-OP                      { cout << "NUM-OP -> EXP " << endl;         $$ = $1; }
-                |   LOGICAL-OP                  { cout << "LOGICAL-OPP -> EXP " << endl;    $$ = $1; }
-                |   IF-EXP                      { cout << "IF-EXP -> EXP " << endl;         $$ = $1; }
-                |   FUN-EXP                     { cout << "FUN-EXP -> EXP " << endl;        $$ = $1; }
-                |   FUN-CALL                    {}
+                |   NUM_OP                      { cout << "NUM_OP -> EXP " << endl;         $$ = $1; }
+                |   LOGICAL_OP                  { cout << "LOGICAL_OPP -> EXP " << endl;    $$ = $1; }
+                |   IF_EXP                      { cout << "IF_EXP -> EXP " << endl;         $$ = $1; }
+                |   FUN_EXP                     { cout << "FUN_EXP -> EXP " << endl;        $$ = $1; }
+                |   FUN_CALL                    {}
                 ;
 
-NUM-OP          :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << endl; $$ = newNode($3, $4, "Plus", 0); }
+NUM_OP          :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " << endl; $$ = newNode($3, $4, "Plus", 0); }
                 |   '(' Minus EXP EXP ')'       { cout << "New node for sub " << $3->ival << " - " << $4->ival << endl; $$ = newNode($3, $4, "Minus", 0); }
                 |   '(' Mul EXP EXPS ')'        { cout << "New node for mul " << endl; $$ = newNode($3, $4, "Mul", 0);}
                 |   '(' Div EXP EXP ')'         { cout << "New node for div " << $3->ival << " / " << $4->ival << endl; $$ = newNode($3, $4, "Div", 0); }
@@ -87,26 +87,26 @@ NUM-OP          :   '(' Plus EXP EXPS ')'       { cout << "New node for plus " <
                 |   '(' Smaller EXP EXP ')'     { cout << "New node for smaller " << $3->ival << " < " << $4->ival << endl; $$ = newNode($3, $4, "Smaller", 1); }
                 |   '(' Equal EXP EXPS ')'      { cout << "New node for equal " << endl; $$ = newNode($3, $4, "Equal", 1); }
                 ;
-LOGICAL-OP      :   '(' And EXP EXPS ')'        { cout << "New node for and " << endl; $$ = newNode($3, $4, "And", 1); }
+LOGICAL_OP      :   '(' And EXP EXPS ')'        { cout << "New node for and " << endl; $$ = newNode($3, $4, "And", 1); }
                 |   '(' Or EXP EXPS ')'         { cout << "New node for or " << endl; $$ = newNode($3, $4, "Or", 1); }
                 |   '(' Not EXP ')'             { cout << "New node for not " << $3->bval << endl; $$ = newNode($3, NULL, "Not", 1); }
                 ;
 
-IF-EXP          :   '(' IF TEST-EXP THAN-ELSE-EXP ')'   { cout << "New node for IF-EXP " << endl; $$ = newNode($3, $4, "IF", 0);}
+IF_EXP          :   '(' IF TEST_EXP THAN_ELSE_EXP ')'   { cout << "New node for IF_EXP " << endl; $$ = newNode($3, $4, "IF", 0);}
                 ;
-TEST-EXP        :   EXP                                 { cout << "EXP -> TEST-EXP | "; $$ = $1; printNodeInfo($$); }
+TEST_EXP        :   EXP                                 { cout << "EXP -> TEST_EXP | "; $$ = $1; printNodeInfo($$); }
                 ;
-THAN-ELSE-EXP   :   EXP EXP                             { cout << "New node for THAN-ELSE EXP" << endl; $$ = newNode($1, $2, "THAN-ELSE-EXP"); }
+THAN_ELSE_EXP   :   EXP EXP                             { cout << "New node for THAN-ELSE EXP" << endl; $$ = newNode($1, $2, "THAN_ELSE_EXP"); }
                 ;
 
-FUN-EXP         :   '(' FUN FUN_IDs FUN-BODY ')'       { cout << "New node for FUN-EXP " << endl; $$ = newNode($3, $4, "FUN", 3); }
+FUN_EXP         :   '(' FUN FUN_IDs FUN_BODY ')'       { cout << "New node for FUN_EXP " << endl; $$ = newNode($3, $4, "FUN", 3); }
                 ;
 FUN_IDs         :   '(' PARAMETERS ')'                  { cout << "FUN_IDs complete !!" << endl; $$ = $2; }
                 ;
-FUN-BODY        :   EXP                                 {  cout << "EXP -> FUN-BODY | "; $$ = $1; printNodeInfo($$); }
+FUN_BODY        :   EXP                                 {  cout << "EXP -> FUN_BODY | "; $$ = $1; printNodeInfo($$); }
                 ;
-FUN-CALL        :   '(' FUN-EXP ARGUMENTS ')'   { cout << "New node for no-named FUN-CALL " << endl;    $$ = newNode($2, $3, "FUN-CALL", 3); }
-                |   '(' VARIABLE ARGUMENTS ')' { cout << "New node for named FUN-CALL " << endl;        $$ = newNode($2, $3, "NAMED-FUN-CALL", 3);}
+FUN_CALL        :   '(' FUN_EXP ARGUMENTS ')'   { cout << "New node for no-named FUN_CALL " << endl;    $$ = newNode($2, $3, "FUN_CALL", 3); }
+                |   '(' VARIABLE ARGUMENTS ')' { cout << "New node for named FUN_CALL " << endl;        $$ = newNode($2, $3, "NAMED-FUN_CALL", 3);}
                 ;
 
 ARGUMENTS       :   EXP ARGUMENTS               { cout << "New node for ARGUMENTS " << endl; $$ = newNode($1, $2, "ARGUMENTS", 4);}
@@ -330,11 +330,11 @@ void traverseAST(Node *node) {
             }
         }
     }
-    //  ----------------------- IF-EXP -----------------------
+    //  ----------------------- IF_EXP -----------------------
     else if(node->type == "IF") {
         traverseAST(node->left);
 
-        // if TEST-EXP = TRUE -> do THAN-EXP(left child of THAN-ELSE-EXP node)
+        // if TEST_EXP = TRUE -> do THAN-EXP(left child of THAN_ELSE_EXP node)
         if(node->left->bval){
             traverseAST(node->right->left);
             if(node->right->left->rtype == 0){
@@ -346,7 +346,7 @@ void traverseAST(Node *node) {
                 node->rtype = 1;
             }
         }
-        // if TEST-EXP = FALSE -> do ELSE-EXP(right child of THAN-ELSE-EXP node)
+        // if TEST_EXP = FALSE -> do ELSE-EXP(right child of THAN_ELSE_EXP node)
         else{
             traverseAST(node->right->right);
             if(node->right->right->rtype == 0){
@@ -358,32 +358,32 @@ void traverseAST(Node *node) {
                 node->rtype = 1;
             }
         }
-        cout << "[ Traverse Node - IF-EXP ]: Test is " << node->left->bval << endl;
+        cout << "[ Traverse Node - IF_EXP ]: Test is " << node->left->bval << endl;
     }
     //  ----------------------- FUN -----------------------
     else if(node->type == "FUN") { 
         traverseAST(node->left);                // traverse parameters first, create parTable for <funMode>
         bindArgs2Pars(funMode);                 // node(id) will find value in parameter
-        traverseAST(node->right);               // traverse FUN-EXP with arguments 
+        traverseAST(node->right);               // traverse FUN_EXP with arguments 
         node->rtype = node->right->rtype;
         node->ival = node->right->ival;
         node->bval = node->right->bval;
         cout << "[ Traverse Node - FUN] " << endl;
     }
-    else if(node->type == "FUN-CALL") { 
+    else if(node->type == "FUN_CALL") { 
         traverseAST(node->right);               // trace arguments first
         funMode = "noNameFun";
         traverseAST(node->left);                // then trace FUN
         node->rtype = node->left->rtype;
         node->ival = node->left->ival;
         node->bval = node->left->bval;
-        cout << "[ Traverse Node - FUN-CALL] " << endl;
+        cout << "[ Traverse Node - FUN_CALL] " << endl;
         // reset
         parTable["noNameFun"].clear();
         args.clear();
         funMode = "none"; 
     }
-    else if(node->type == "NAMED-FUN-CALL") { 
+    else if(node->type == "NAMED-FUN_CALL") { 
         traverseAST(node->right);               // trace arguments first
         funMode = node->left->name;
         traverseAST(node->left);                // then trace variable(FUN-NAME) -> trace FUN
@@ -391,7 +391,7 @@ void traverseAST(Node *node) {
         node->rtype = funTable[funMode]->rtype;
         node->ival  = funTable[funMode]->ival;
         node->bval  = funTable[funMode]->bval;
-        cout << "[ Traverse Node - NAMED-FUN-CALL]" << endl;
+        cout << "[ Traverse Node - NAMED-FUN_CALL]" << endl;
         // reset
         parTable[node->left->name].clear();
         args.clear();
@@ -493,10 +493,6 @@ void bindArgs2Pars(string funName) {
         cout << "[ Bind ]" << it3->first << endl;
     }
 }
-
-// bool typeChecking(Node *left, Node *right, bool is_number) {
-
-// }
 
 // ----------------For Debugging----------------------
 

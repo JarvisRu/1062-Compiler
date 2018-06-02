@@ -15,7 +15,7 @@
     string funMode = "none";
     map<string, map<string, Var_ptr> > parTable;         // store parameters for function < FUN-NAME , variables name >
     vector<Var_ptr> args;                                // store args for function
-    map<string, Node_ptr> funTable;                      // register named-function, store FUN-EXP node ptr 
+    map<string, Node_ptr> funTable;                      // register named-function, store FUN_EXP node ptr 
     map<string, map<string, Var_ptr> >::iterator it2;  
     map<string, Var_ptr>::iterator it3;  
     map<string, Node_ptr>::iterator it4;  
@@ -38,12 +38,12 @@
 %token<str> PRINT_NUM PRINT_BOOL DEFINE IF FUN
 %type <node> STMTS STMT
 %type <node> EXPS EXP
-%type <node> DEF-STMT PRINT-STMT
+%type <node> DEF_STMT PRINT_STMT
 %type <node> VARIABLE 
-%type <node> NUM-OP LOGICAL-OP
-%type <node> IF-EXP TEST-EXP THAN-ELSE-EXP
-%type <node> FUN-EXP FUN-CALL 
-%type <node> FUN_IDs FUN-BODY 
+%type <node> NUM_OP LOGICAL_OP
+%type <node> IF_EXP TEST_EXP THAN_ELSE_EXP
+%type <node> FUN_EXP FUN_CALL 
+%type <node> FUN_IDs FUN_BODY 
 %type <node> PARAMETERS ARGUMENTS
 
 
@@ -55,13 +55,13 @@ STMTS           :   STMT STMTS                  { $$ = newNode($1, $2, "STMTS");
                 |   STMT                        { $$ = $1; }
                 ;
 STMT            :   EXP                         { $$ = $1; }
-                |   DEF-STMT                    { $$ = $1; }
-                |   PRINT-STMT                  { $$ = $1; }
+                |   DEF_STMT                    { $$ = $1; }
+                |   PRINT_STMT                  { $$ = $1; }
                 ;
 
-DEF-STMT        :   '(' DEFINE VARIABLE EXP ')' { $$ = newNode($3, $4, "DEFINE");  }
+DEF_STMT        :   '(' DEFINE VARIABLE EXP ')' { $$ = newNode($3, $4, "DEFINE");  }
                 ;
-PRINT-STMT      :   '(' PRINT_NUM EXP ')'       { $$ = newNode($3, NULL, "PRINT_NUM"); }
+PRINT_STMT      :   '(' PRINT_NUM EXP ')'       { $$ = newNode($3, NULL, "PRINT_NUM"); }
                 |   '(' PRINT_BOOL EXP ')'      { $$ = newNode($3, NULL, "PRINT_BOOL");}
                 ;
 
@@ -71,14 +71,14 @@ EXPS            :   EXP EXPS                    { $$ = newNode($1, $2, "EXPS"); 
 EXP             :   bool_val                    { $$ = newNode(NULL, NULL, "bool_val", 1, 0, " ", $1); }
                 |   number                      { $$ = newNode(NULL, NULL, "number", 0, $1); }
                 |   VARIABLE                    { $$ = $1; }
-                |   NUM-OP                      { $$ = $1; }
-                |   LOGICAL-OP                  { $$ = $1; }
-                |   IF-EXP                      { $$ = $1; }
-                |   FUN-EXP                     { $$ = $1; }
-                |   FUN-CALL                    {}
+                |   NUM_OP                      { $$ = $1; }
+                |   LOGICAL_OP                  { $$ = $1; }
+                |   IF_EXP                      { $$ = $1; }
+                |   FUN_EXP                     { $$ = $1; }
+                |   FUN_CALL                    {}
                 ;
 
-NUM-OP          :   '(' Plus EXP EXPS ')'       { $$ = newNode($3, $4, "Plus", 0); }
+NUM_OP          :   '(' Plus EXP EXPS ')'       { $$ = newNode($3, $4, "Plus", 0); }
                 |   '(' Minus EXP EXP ')'       { $$ = newNode($3, $4, "Minus", 0); }
                 |   '(' Mul EXP EXPS ')'        { $$ = newNode($3, $4, "Mul", 0);}
                 |   '(' Div EXP EXP ')'         { $$ = newNode($3, $4, "Div", 0); }
@@ -87,26 +87,26 @@ NUM-OP          :   '(' Plus EXP EXPS ')'       { $$ = newNode($3, $4, "Plus", 0
                 |   '(' Smaller EXP EXP ')'     { $$ = newNode($3, $4, "Smaller", 1); }
                 |   '(' Equal EXP EXPS ')'      { $$ = newNode($3, $4, "Equal", 1); }
                 ;
-LOGICAL-OP      :   '(' And EXP EXPS ')'        { $$ = newNode($3, $4, "And", 1); }
+LOGICAL_OP      :   '(' And EXP EXPS ')'        { $$ = newNode($3, $4, "And", 1); }
                 |   '(' Or EXP EXPS ')'         { $$ = newNode($3, $4, "Or", 1); }
                 |   '(' Not EXP ')'             { $$ = newNode($3, NULL, "Not", 1); }
                 ;
 
-IF-EXP          :   '(' IF TEST-EXP THAN-ELSE-EXP ')'   { $$ = newNode($3, $4, "IF", 0);}
+IF_EXP          :   '(' IF TEST_EXP THAN_ELSE_EXP ')'   { $$ = newNode($3, $4, "IF", 0);}
                 ;
-TEST-EXP        :   EXP                                 { $$ = $1; }
+TEST_EXP        :   EXP                                 { $$ = $1; }
                 ;
-THAN-ELSE-EXP   :   EXP EXP                             { $$ = newNode($1, $2, "THAN-ELSE-EXP"); }
+THAN_ELSE_EXP   :   EXP EXP                             { $$ = newNode($1, $2, "THAN_ELSE_EXP"); }
                 ;
 
-FUN-EXP         :   '(' FUN FUN_IDs FUN-BODY ')'        { $$ = newNode($3, $4, "FUN", 3); }
+FUN_EXP         :   '(' FUN FUN_IDs FUN_BODY ')'        { $$ = newNode($3, $4, "FUN", 3); }
                 ;
 FUN_IDs         :   '(' PARAMETERS ')'                  { $$ = $2; }
                 ;
-FUN-BODY        :   EXP                                 { $$ = $1; }
+FUN_BODY        :   EXP                                 { $$ = $1; }
                 ;
-FUN-CALL        :   '(' FUN-EXP ARGUMENTS ')'           { $$ = newNode($2, $3, "FUN-CALL", 3); }
-                |   '(' VARIABLE ARGUMENTS ')'          { $$ = newNode($2, $3, "NAMED-FUN-CALL", 3);}
+FUN_CALL        :   '(' FUN_EXP ARGUMENTS ')'           { $$ = newNode($2, $3, "FUN_CALL", 3); }
+                |   '(' VARIABLE ARGUMENTS ')'          { $$ = newNode($2, $3, "NAMED-FUN_CALL", 3);}
                 ;
 
 ARGUMENTS       :   EXP ARGUMENTS               { $$ = newNode($1, $2, "ARGUMENTS", 4);}
@@ -153,17 +153,12 @@ void traverseAST(Node *node) {
         return;
 
     // do action based on node's type
-    if(node->type == "number") {
-        // cout << "[ Traverse Node - Number ]: " << node->ival << endl;
-    } 
-    else if(node->type == "bool_val") {
-        // cout << "[ Traverse Node - Bool_val ]: " << node->bval << endl;
-    } 
+    if(node->type == "number") {} 
+    else if(node->type == "bool_val") {} 
     else if(node->type == "id") {
         if(funMode == "none") {
             it = varTable.find(node->name); 
             if(it != varTable.end()){
-                // cout << "assign value from existed variable" << endl;
                 node->rtype = it->second.rtype;
                 node->ival = it->second.ival;
                 node->bval = it->second.bval;
@@ -173,27 +168,23 @@ void traverseAST(Node *node) {
                 traverseAST(funTable[node->name]);
             it3 = parTable[funMode].find(node->name);
             if(it3 != parTable[funMode].end()){
-                // cout << "assign value from parameters - " << funMode << endl;
                 node->rtype = it3->second->rtype;
                 node->ival = it3->second->ival;
                 node->bval = it3->second->bval;
             }
         }
-        // cout << "[ Traverse Node - ID ]: " << node->name << endl;
     } 
     // ----------------------- ( Operator EXP EXPS ) -----------------------
     else if(node->type == "Plus") {
         traverseAST(node->left);
         traverseAST(node->right);
         node->ival = (node->right->type == "EXPS") ? node->left->ival + num_op_action(node->type) : node->left->ival + node->right->ival;
-        // cout << "[ Traverse Node - Plus ]: " << node->ival << endl;
         num_action.clear();
     } 
     else if(node->type == "Mul") {
         traverseAST(node->left);
         traverseAST(node->right);
         node->ival = (node->right->type == "EXPS") ? node->left->ival * num_op_action(node->type) : node->left->ival * node->right->ival;
-        // cout << "[ Traverse Node - Mul ]: " << node->ival << endl;
         num_action.clear();
     } 
     else if(node->type == "Equal") {
@@ -207,21 +198,18 @@ void traverseAST(Node *node) {
         } else {
              node->bval = (node->left->ival ==  node->right->ival)? 1 : 0;
         }
-        // cout << "[ Traverse Node - Equal ]: " << node->bval << endl;
         num_action.clear();
     } 
     else if(node->type == "And") {
         traverseAST(node->left);
         traverseAST(node->right);
         node->bval = (node->right->type == "EXPS") ? node->left->bval && bool_op_action(node->type) : node->left->bval && node->right->bval;
-        // cout << "[ Traverse Node - And ]: " << node->bval << endl;
         bool_action.clear();
     } 
     else if(node->type == "Or") {
         traverseAST(node->left);
         traverseAST(node->right);
         node->bval = (node->right->type == "EXPS") ? node->left->bval || bool_op_action(node->type) : node->left->bval || node->right->bval;
-        // cout << "[ Traverse Node - Or ]: " << node->bval << endl;
         bool_action.clear();
     } 
     //  ----------------------- ( Operator EXP EXP ) -----------------------
@@ -229,31 +217,26 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         traverseAST(node->right);
         node->ival = node->left->ival - node->right->ival;
-        // cout << "[ Traverse Node - Minus ]: " << node->ival << endl;
     } 
     else if(node->type == "Div") {
         traverseAST(node->left);
         traverseAST(node->right);
         node->ival = node->left->ival / node->right->ival;
-        // cout << "[ Traverse Node - Div ]: " << node->ival << endl;
     } 
     else if(node->type == "Mod") {
         traverseAST(node->left);
         traverseAST(node->right); 
         node->ival = node->left->ival % node->right->ival;
-        // cout << "[ Traverse Node - Div ]: " << node->ival << endl;
     }
     else if(node->type == "Greater") {
         traverseAST(node->left);
         traverseAST(node->right); 
         node->bval = (node->left->ival > node->right->ival)? 1 : 0;
-        // cout << "[ Traverse Node - Greater ]: " << node->bval << endl;
     }
     else if(node->type == "Smaller") {
         traverseAST(node->left);
         traverseAST(node->right); 
         node->bval = (node->left->ival < node->right->ival)? 1 : 0;
-        // cout << "[ Traverse Node - Smaller ]: " << node->bval << endl;
     }
     // ----------------------- PRINT -----------------------
     else if(node->type == "PRINT_NUM") {
@@ -280,14 +263,12 @@ void traverseAST(Node *node) {
         traverseAST(node->right);
         // for LOGIC
         if (node->left->rtype == 1 && node->right->rtype == 1) {
-            // cout << "[ Traverse Node - EXPS(LOGIC) ] " << node->left->bval << " | " << node->right->bval << endl;
             bool_action.push_back(node->left->bval);
             if(node->right->type != "EXPS")
                 bool_action.push_back(node->right->bval);
         }
         // for NUM
         else {
-            // cout << "[ Traverse Node - EXPS(NUM) ] " << node->left->ival << " | " << node->right->ival << endl;
             num_action.push_back(node->left->ival);
             if(node->right->type != "EXPS")
                 num_action.push_back(node->right->ival);
@@ -298,7 +279,6 @@ void traverseAST(Node *node) {
         traverseAST(node->left);
         node->bval = !node->left->bval;
         node->rtype = node->left->rtype;
-        // cout << "[ Traverse Node - Not ]: " << node->bval << endl;
     }
     //  ----------------------- DEFINE -----------------------
     else if(node->type == "DEFINE") {
@@ -312,9 +292,7 @@ void traverseAST(Node *node) {
                 varTable[node->name].rtype = node->right->rtype;  
                 varTable[node->name].ival = (node->right->rtype == 0)? node->right->ival : 0;  
                 varTable[node->name].bval = (node->right->rtype == 1)? node->right->bval : 0;  
-                // cout << "[ Traverse Node - DEFINE variable name]: " << node->name << " - into map" << endl;
             } else {
-                // cout << "You can't redefining exist variable !!" << endl;
             }
         }
         // define a function name : store function ptr in funTable 
@@ -324,17 +302,16 @@ void traverseAST(Node *node) {
             node->rtype = node->right->rtype;
             if(allow2Define(node->name, 2)){
                 funTable[node->name] = node->right;  
-                // cout << "[ Traverse Node - DEFINE - function name]: " << node->name << " - into map" << endl;
             } else {
-                // cout << "You can't redefining exist function name !!" << endl;
+                cout << "You can't redefining exist function name !!" << endl;
             }
         }
     }
-    //  ----------------------- IF-EXP -----------------------
+    //  ----------------------- IF_EXP -----------------------
     else if(node->type == "IF") {
         traverseAST(node->left);
 
-        // if TEST-EXP = TRUE -> do THAN-EXP(left child of THAN-ELSE-EXP node)
+        // if TEST_EXP = TRUE -> do THAN-EXP(left child of THAN_ELSE_EXP node)
         if(node->left->bval){
             traverseAST(node->right->left);
             if(node->right->left->rtype == 0){
@@ -346,7 +323,7 @@ void traverseAST(Node *node) {
                 node->rtype = 1;
             }
         }
-        // if TEST-EXP = FALSE -> do ELSE-EXP(right child of THAN-ELSE-EXP node)
+        // if TEST_EXP = FALSE -> do ELSE-EXP(right child of THAN_ELSE_EXP node)
         else{
             traverseAST(node->right->right);
             if(node->right->right->rtype == 0){
@@ -358,32 +335,30 @@ void traverseAST(Node *node) {
                 node->rtype = 1;
             }
         }
-        // cout << "[ Traverse Node - IF-EXP ]: Test is " << node->left->bval << endl;
     }
     //  ----------------------- FUN -----------------------
     else if(node->type == "FUN") { 
         traverseAST(node->left);                // traverse parameters first, create parTable for <funMode>
         bindArgs2Pars(funMode);                 // node(id) will find value in parameter
-        traverseAST(node->right);               // traverse FUN-EXP with arguments 
+        traverseAST(node->right);               // traverse FUN_EXP with arguments 
         node->rtype = node->right->rtype;
         node->ival = node->right->ival;
         node->bval = node->right->bval;
-        // cout << "[ Traverse Node - FUN] " << endl;
     }
-    else if(node->type == "FUN-CALL") { 
+    else if(node->type == "FUN_CALL") { 
         traverseAST(node->right);               // trace arguments first
         funMode = "noNameFun";
         traverseAST(node->left);                // then trace FUN
         node->rtype = node->left->rtype;
         node->ival = node->left->ival;
         node->bval = node->left->bval;
-        // cout << "[ Traverse Node - FUN-CALL] " << endl;
+
         // reset
         parTable["noNameFun"].clear();
         args.clear();
         funMode = "none"; 
     }
-    else if(node->type == "NAMED-FUN-CALL") { 
+    else if(node->type == "NAMED-FUN_CALL") { 
         traverseAST(node->right);               // trace arguments first
         funMode = node->left->name;
         traverseAST(node->left);                // then trace variable(FUN-NAME) -> trace FUN
@@ -391,7 +366,7 @@ void traverseAST(Node *node) {
         node->rtype = funTable[funMode]->rtype;
         node->ival  = funTable[funMode]->ival;
         node->bval  = funTable[funMode]->bval;
-        // cout << "[ Traverse Node - NAMED-FUN-CALL]" << endl;
+
         // reset
         parTable[node->left->name].clear();
         args.clear();
@@ -400,7 +375,6 @@ void traverseAST(Node *node) {
     else if(node->type == "PARAMETERS") {
         traverseAST(node->left);
         traverseAST(node->right);
-        // cout << "[ Traverse Node - PARAMETERS] - " << funMode << endl;
         if(node->right != NULL && node->right->type != "PARAMETERS")
             parTable[funMode][node->right->name] = newVar(0, 0, 0);
         if(node->left != NULL && node->left->type != "PARAMETERS")
@@ -409,23 +383,18 @@ void traverseAST(Node *node) {
     else if(node->type == "ARGUMENTS") {
         traverseAST(node->left);
         traverseAST(node->right);
-        // cout << "[ Traverse Node - ARGUMENTS] " << endl;
         if(node->right != NULL && node->right->type != "ARGUMENTS") {
             if(node->right->rtype == 0) {
                 args.push_back(newVar(0, node->right->ival, 0));
-                // cout << "Push one var as arg - " << node->right->ival << endl;
             }else if(node->right->rtype == 1) {
                 args.push_back(newVar(1, 0, node->right->bval));
-                // cout << "Push one var as arg - " << node->right->bval << endl;
             } 
         }
         if(node->left != NULL && node->left->type != "ARGUMENTS") {
             if(node->left->rtype == 0) {
                 args.push_back(newVar(0, node->left->ival, 0));
-                // cout << "Push one var as arg - " << node->left->ival << endl;
             }else if(node->left->rtype == 1) {
                 args.push_back(newVar(1, 0, node->left->bval));
-                // cout << "Push one var as arg - " << node->left->bval << endl;
             } 
         }
         
@@ -456,7 +425,6 @@ int num_op_action(string type){
                 return NOT_EQUAL;
         }
     }
-    // cout << "num_op_action RES: " << res << endl;
     return res;
 }
 
@@ -469,7 +437,6 @@ bool bool_op_action(string type){
         else if(type == "Or")
             res = (res || bool_action[i])? 1 : 0;
     }
-    // cout << "bool_op_action RES: " << res << endl;
     return res;
 }
 
@@ -490,13 +457,8 @@ void bindArgs2Pars(string funName) {
     it3 = parTable[funName].begin();
     for(int i = args.size() - 1 ; i >= 0 ; i--, it3++) {
         it3->second = args[i];
-        // cout << "[ Bind ]" << it3->first << endl;
     }
 }
-
-// bool typeChecking(Node *left, Node *right, bool is_number) {
-
-// }
 
 // ----------------For Debugging----------------------
 

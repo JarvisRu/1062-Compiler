@@ -37,7 +37,7 @@ int num_op_action(string);              // return result in EXPS for operator : 
 bool bool_op_action(string);            // return result in EXPS for operator : And Or Not
 bool allow2Define(string,int);          // to check if this variable is defined already, mode 1 for variable name, 2 for function name
 void bindArgs2Pars(string);             // bind arguments to parameters for function 
-bool typeChecking(Node*, Node*, bool);  // check input type
+// bool typeChecking(Node*, Node*, bool);  // check input type
 
 // for debug
 void printNodeInfo(Node*);      
