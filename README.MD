@@ -10,7 +10,6 @@
 - [Problem6A.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013834/matrix.calculator.pdf)
 - [Problem6B.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013836/Equilibrim.pdf)
 
-
 ## Boss Attack 1
 - [BA01.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013809/BA01.pdf)
 - [BA02.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013814/BA02.-.pdf)
@@ -18,6 +17,10 @@
 ## Boss Attack 2
 - [BA01 - Scientific Notation.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013817/Scientific.Notation.pdf)
 - [BA02 - Table.pdf](https://github.com/JarvisRu/1062-Compiler/files/2013818/Table.pdf)
+
+## Boss Attack 3
+- [BA01 - Simple LaTeX Evaluation.pdf](https://github.com/JarvisRu/Cplus-Socket-ChessGame/files/2064900/Simple.LaTeX.Evaluation.pdf)
+- [BA02 - Stack base machine.pdf](https://github.com/JarvisRu/Cplus-Socket-ChessGame/files/2064897/Stack.base.machine.pdf)
 
 ## Compile
 ### Lex
