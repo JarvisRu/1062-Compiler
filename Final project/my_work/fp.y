@@ -554,10 +554,10 @@ int main(int argc, char *argv[]) {
     // debugging
     cout << endl << "========================" << endl;
     printAllVariable();
-    // cout << "========================" << endl;
-    // printAllFunPars();
-    // cout << "========================" << endl;
-    // printAllFunArgs();
+    cout << "========================" << endl;
+    printAllFunPars();
+    cout << "========================" << endl;
+    printAllFunArgs();                      // generally, args will be clear after calling function
 
     return(0);
 }
